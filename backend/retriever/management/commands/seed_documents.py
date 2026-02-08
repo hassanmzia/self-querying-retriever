@@ -138,7 +138,7 @@ class Command(BaseCommand):
 
         if clear:
             deleted_count, _ = Document.objects.filter(
-                collection=collection
+                collection_name=collection_name
             ).delete()
             self.stdout.write(
                 self.style.WARNING(f"Cleared {deleted_count} existing documents")
@@ -151,7 +151,7 @@ class Command(BaseCommand):
         for doc_data in SEED_DOCUMENTS:
             doc, doc_created = Document.objects.get_or_create(
                 title=doc_data["title"],
-                collection=collection,
+                collection_name=collection_name,
                 defaults={
                     "content": doc_data["content"],
                     "metadata_json": doc_data["metadata"],
@@ -176,7 +176,7 @@ class Command(BaseCommand):
 
         # Update collection document count
         collection.document_count = Document.objects.filter(
-            collection=collection
+            collection_name=collection_name
         ).count()
         collection.save(update_fields=["document_count"])
 
@@ -193,21 +193,16 @@ class Command(BaseCommand):
             from retriever.services.vector_store import ChromaDBService
 
             chroma_service = ChromaDBService()
-            documents = Document.objects.filter(collection=collection)
-            indexed = chroma_service.index_documents(
+            documents = list(Document.objects.filter(collection_name=collection_name))
+            chroma_service.add_documents(
                 collection_name=collection_name,
-                documents=[
-                    {
-                        "id": str(d.id),
-                        "content": d.content,
-                        "metadata": d.metadata_json or {},
-                    }
-                    for d in documents
-                ],
+                texts=[d.content for d in documents],
+                metadatas=[d.metadata_json or {} for d in documents],
+                ids=[str(d.id) for d in documents],
             )
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Indexed {indexed} documents in ChromaDB"
+                    f"Indexed {len(documents)} documents in ChromaDB"
                 )
             )
         except Exception as e:

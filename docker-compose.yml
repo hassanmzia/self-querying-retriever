@@ -78,7 +78,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6383
       - CHROMA_HOST=chromadb
-      - CHROMA_PORT=8583
+      - CHROMA_PORT=8000
       - LANGFUSE_HOST=http://langfuse:3085
     volumes:
       - ./backend:/app
@@ -117,7 +117,7 @@ services:
       - POSTGRES_PORT=5483
       - REDIS_URL=redis://redis:6383/0
       - CHROMA_HOST=chromadb
-      - CHROMA_PORT=8583
+      - CHROMA_PORT=8000
       - CELERY_BROKER_URL=redis://redis:6383/1
       - CELERY_RESULT_BACKEND=redis://redis:6383/2
     depends_on:
@@ -252,9 +252,8 @@ services:
     image: chromadb/chroma:1.0.13
     container_name: sqr-chromadb
     ports:
-      - "8583:8583"
+      - "8583:8000"
     environment:
-      - CHROMA_SERVER_HTTP_PORT=8583
       - ANONYMIZED_TELEMETRY=FALSE
     volumes:
       - chroma-data:/data

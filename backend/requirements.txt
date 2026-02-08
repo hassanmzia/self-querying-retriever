@@ -29,7 +29,7 @@ langsmith==0.3.18
 
 # Vector store / Embeddings
 chromadb==0.6.3
-openai==1.66.3
+openai==1.68.2
 
 # Retrieval / Ranking
 rank_bm25==0.2.2

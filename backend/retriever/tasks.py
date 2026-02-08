@@ -162,12 +162,15 @@ def run_query_pipeline(self, query_id: str | None, request_data: dict):
 
         # Persist results.
         for idx, doc_result in enumerate(raw_results):
-            doc_id = doc_result.get("document_id")
+            doc_id = doc_result.get("document_id", "")
+            # Strip _chunk_N suffix if present (ChromaDB stores chunk IDs).
+            if "_chunk_" in doc_id:
+                doc_id = doc_id.split("_chunk_")[0]
             doc_obj = None
             if doc_id:
                 try:
                     doc_obj = Document.objects.get(id=doc_id)
-                except Document.DoesNotExist:
+                except (Document.DoesNotExist, Exception):
                     continue
 
             if doc_obj:

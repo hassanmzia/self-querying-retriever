@@ -150,6 +150,20 @@ class CollectionViewSet(viewsets.ModelViewSet):
     serializer_class = CollectionSerializer
     lookup_field = "name"
 
+    def get_object(self):
+        """Look up collection by UUID first, then fall back to name."""
+        lookup = self.kwargs.get(self.lookup_field, "")
+        # Try UUID lookup first (frontend sends UUIDs).
+        if len(lookup) == 36 and "-" in lookup:
+            try:
+                obj = Collection.objects.get(id=lookup)
+                self.check_object_permissions(self.request, obj)
+                return obj
+            except (Collection.DoesNotExist, ValueError):
+                pass
+        # Fall back to default name-based lookup.
+        return super().get_object()
+
     @action(detail=True, methods=["get"])
     def stats(self, request, name=None):
         """Return document count and metadata distribution for a collection."""

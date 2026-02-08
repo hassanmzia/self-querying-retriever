@@ -20,7 +20,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       query: req.query,
     });
 
-    await forwardResponse(req, res, '/api/documents/', {
+    await forwardResponse(req, res, '/api/v1/retriever/documents/', {
       params: {
         page: (req.query.page as string) || '1',
         page_size: (req.query.page_size as string) || '20',
@@ -51,7 +51,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
     if (contentType.includes('multipart/form-data')) {
       // For file uploads, proxy the raw request directly
-      await forwardResponse(req, res, '/api/documents/', {
+      await forwardResponse(req, res, '/api/v1/retriever/documents/', {
         method: 'POST',
         headers: {
           'Content-Type': contentType,
@@ -67,7 +67,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
         );
       }
 
-      const backendRes = await proxyRequest(req, '/api/documents/', {
+      const backendRes = await proxyRequest(req, '/api/v1/retriever/documents/', {
         method: 'POST',
         data: req.body,
       });
@@ -96,7 +96,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       documentId: id,
     });
 
-    await forwardResponse(req, res, `/api/documents/${id}/`);
+    await forwardResponse(req, res, `/api/v1/retriever/documents/${id}/`);
   } catch (error) {
     next(error);
   }
@@ -120,7 +120,7 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
       fields: Object.keys(req.body),
     });
 
-    const backendRes = await proxyRequest(req, `/api/documents/${id}/`, {
+    const backendRes = await proxyRequest(req, `/api/v1/retriever/documents/${id}/`, {
       method: 'PUT',
       data: req.body,
     });
@@ -148,7 +148,7 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
       documentId: id,
     });
 
-    const backendRes = await proxyRequest(req, `/api/documents/${id}/`, {
+    const backendRes = await proxyRequest(req, `/api/v1/retriever/documents/${id}/`, {
       method: 'DELETE',
     });
 
@@ -187,7 +187,7 @@ router.post('/bulk', async (req: Request, res: Response, next: NextFunction) => 
       count: documents.length,
     });
 
-    const backendRes = await proxyRequest(req, '/api/documents/bulk/', {
+    const backendRes = await proxyRequest(req, '/api/v1/documents/upload/bulk/', {
       method: 'POST',
       data: req.body,
     });
@@ -215,7 +215,7 @@ router.get('/collections', async (req: Request, res: Response, next: NextFunctio
   try {
     logger.debug('Listing collections', { requestId: req.requestId });
 
-    await forwardResponse(req, res, '/api/collections/', {
+    await forwardResponse(req, res, '/api/v1/retriever/collections/', {
       params: {
         page: (req.query.page as string) || '1',
         page_size: (req.query.page_size as string) || '50',
@@ -241,7 +241,7 @@ router.post('/collections', async (req: Request, res: Response, next: NextFuncti
       name: req.body.name,
     });
 
-    const backendRes = await proxyRequest(req, '/api/collections/', {
+    const backendRes = await proxyRequest(req, '/api/v1/retriever/collections/', {
       method: 'POST',
       data: req.body,
     });
@@ -269,7 +269,7 @@ router.get('/collections/:id', async (req: Request, res: Response, next: NextFun
       collectionId: id,
     });
 
-    await forwardResponse(req, res, `/api/collections/${id}/`);
+    await forwardResponse(req, res, `/api/v1/retriever/collections/${id}/`);
   } catch (error) {
     next(error);
   }

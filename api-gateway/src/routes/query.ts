@@ -53,7 +53,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 
     // Standard non-streaming request: proxy to Django backend
-    const backendRes = await proxyRequest(req, '/api/query/', {
+    const backendRes = await proxyRequest(req, '/api/v1/retriever/query/', {
       method: 'POST',
       data: {
         ...queryData,
@@ -82,7 +82,7 @@ router.get('/history', async (req: Request, res: Response, next: NextFunction) =
       query: req.query,
     });
 
-    await forwardResponse(req, res, '/api/query/history/', {
+    await forwardResponse(req, res, '/api/v1/retriever/queries/', {
       params: {
         page: (req.query.page as string) || '1',
         page_size: (req.query.page_size as string) || '20',
@@ -113,7 +113,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       queryId: id,
     });
 
-    await forwardResponse(req, res, `/api/query/${id}/`);
+    await forwardResponse(req, res, `/api/v1/retriever/queries/${id}/`);
   } catch (error) {
     next(error);
   }
@@ -137,7 +137,7 @@ router.post('/expand', async (req: Request, res: Response, next: NextFunction) =
       numExpansions: expandData.num_expansions,
     });
 
-    const backendRes = await proxyRequest(req, '/api/query/expand/', {
+    const backendRes = await proxyRequest(req, '/api/v1/retriever/query/expand/', {
       method: 'POST',
       data: expandData,
     });
@@ -174,7 +174,7 @@ router.post('/compare', async (req: Request, res: Response, next: NextFunction) 
       methods: compareData.methods,
     });
 
-    const backendRes = await proxyRequest(req, '/api/query/compare/', {
+    const backendRes = await proxyRequest(req, '/api/v1/retriever/query/compare/', {
       method: 'POST',
       data: compareData,
     });

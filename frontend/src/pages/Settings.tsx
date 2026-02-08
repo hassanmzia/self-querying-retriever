@@ -17,7 +17,7 @@ import clsx from "clsx";
 import toast from "react-hot-toast";
 import { useQueryStore, useUIStore } from "@/store";
 import Badge from "@/components/common/Badge";
-import type { RetrievalMethod } from "@/types";
+import { RetrievalMethod } from "@/types";
 
 // ============================================================
 // Settings Page
@@ -146,7 +146,7 @@ export default function Settings() {
   const handleReset = () => {
     setApiBaseUrl("http://172.168.1.95:3084");
     setWsUrl("ws://172.168.1.95:3084/ws");
-    setDefaultMethod("hybrid" as RetrievalMethod);
+    setDefaultMethod(RetrievalMethod.HYBRID);
     setDefaultTopK(10);
     setDefaultScoreThreshold(0.5);
     setEnableStreaming(true);
@@ -387,15 +387,13 @@ export default function Settings() {
           <div>
             <label className="mb-2 block text-sm text-slate-300">Default Retrieval Method</label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-              {(
-                [
-                  { value: "vector", label: "Vector" },
-                  { value: "self_query", label: "Self-Query" },
-                  { value: "bm25", label: "BM25" },
-                  { value: "hybrid", label: "Hybrid" },
-                  { value: "hypothetical", label: "Hypothetical" },
-                ] as const
-              ).map((method) => (
+              {[
+                  { value: RetrievalMethod.VECTOR, label: "Vector" },
+                  { value: RetrievalMethod.SELF_QUERY, label: "Self-Query" },
+                  { value: RetrievalMethod.BM25, label: "BM25" },
+                  { value: RetrievalMethod.HYBRID, label: "Hybrid" },
+                  { value: RetrievalMethod.HYPOTHETICAL, label: "Hypothetical" },
+                ].map((method) => (
                 <button
                   key={method.value}
                   onClick={() => setDefaultMethod(method.value)}

@@ -96,10 +96,31 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       data: backendPayload,
     });
 
+    // Map backend response to frontend QueryResponse format
+    // Backend: { query_id, query, results, pipeline_used, execution_time_ms, agent_trace, expanded_query }
+    // Frontend: { query_id, query, results, total_results, retrieval_method, execution_time_ms, agent_trace, metadata }
+    const reverseMethodMap: Record<string, string> = { vanilla: 'vector' };
+    const bd = backendRes.data || {};
+    const results = bd.results || [];
+    const frontendResponse = {
+      query_id: bd.query_id,
+      query: bd.query,
+      results,
+      total_results: results.length,
+      retrieval_method: reverseMethodMap[bd.pipeline_used] || bd.pipeline_used || rawMethod,
+      execution_time_ms: bd.execution_time_ms || 0,
+      agent_trace: bd.agent_trace,
+      metadata: {
+        collection_id: (queryData as any).collection_id || backendPayload.collection_name,
+        model_used: 'text-embedding-3-small',
+        tokens_used: 0,
+        cached: false,
+      },
+    };
+
     res.status(backendRes.status).json({
-      success: backendRes.status >= 200 && backendRes.status < 300,
-      data: backendRes.data,
-      timestamp: new Date().toISOString(),
+      data: frontendResponse,
+      status: backendRes.status,
     });
   } catch (error) {
     next(error);

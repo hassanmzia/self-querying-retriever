@@ -29,7 +29,7 @@ const config: Config = {
 
   mcpServerUrl: process.env.MCP_SERVER_URL || 'http://mcp-server:3086',
 
-  corsOrigins: (process.env.CORS_ORIGINS || 'http://172.168.1.95:3083').split(',').map(s => s.trim()),
+  corsOrigins: (process.env.CORS_ORIGINS || 'http://172.168.1.95:3088').split(',').map(s => s.trim()),
 
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),

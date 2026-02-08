@@ -29,7 +29,7 @@ import type {
 // ============================================================
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://172.168.1.95:3087";
+  import.meta.env.VITE_API_URL || "http://172.168.1.95:3087";
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api`,

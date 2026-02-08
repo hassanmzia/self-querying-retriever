@@ -143,7 +143,7 @@ CHANNEL_LAYERS = {
 # ---------------------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS",
-    "http://172.168.1.95:3083",
+    "http://172.168.1.95:3088,http://localhost:3088",
 ).split(",")
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = DEBUG

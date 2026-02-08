@@ -68,9 +68,14 @@ services:
       - .env
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings
+      - POSTGRES_DB=${POSTGRES_DB:-sqr_db}
+      - POSTGRES_USER=${POSTGRES_USER:-sqr_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-sqr_secure_password_change_me}
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5483
       - REDIS_URL=redis://redis:6383/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6383
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8583
       - LANGFUSE_HOST=http://langfuse:3085

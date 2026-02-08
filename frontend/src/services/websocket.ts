@@ -43,7 +43,7 @@ class WebSocketClient {
 
   constructor(config?: Partial<WebSocketConfig>) {
     const wsBaseUrl =
-      import.meta.env.VITE_WS_URL || "ws://172.168.1.95:3084";
+      import.meta.env.VITE_WS_URL || "ws://172.168.1.95:3087";
 
     this.config = {
       url: `${wsBaseUrl}/ws`,

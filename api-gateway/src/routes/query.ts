@@ -168,9 +168,12 @@ router.get('/history', async (req: Request, res: Response, next: NextFunction) =
       },
     });
 
-    // Map DRF pagination + field names to frontend PaginatedResponse<QueryHistoryItem>
-    const results = backendRes.data?.results || backendRes.data || [];
-    const total = backendRes.data?.count || (Array.isArray(results) ? results.length : 0);
+    // Map backend pagination to frontend PaginatedResponse<QueryHistoryItem>
+    // Backend uses FrontendPagination: { data: [...], total, page, page_size, total_pages }
+    // Also handle DRF default: { count, next, previous, results: [...] }
+    const body = backendRes.data || {};
+    const results = body.data ?? body.results ?? (Array.isArray(body) ? body : []);
+    const total = body.total ?? body.count ?? (Array.isArray(results) ? results.length : 0);
 
     const items = (Array.isArray(results) ? results : []).map((q: any) => ({
       id: q.id,

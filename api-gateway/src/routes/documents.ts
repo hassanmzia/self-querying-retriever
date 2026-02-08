@@ -35,7 +35,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       params: {
         page: (req.query.page as string) || '1',
         page_size: (req.query.page_size as string) || '20',
-        collection: (req.query.collection as string) || '',
+        collection_name: (req.query.collection_id as string) || (req.query.collection as string) || '',
         search: (req.query.search as string) || '',
         sort: (req.query.sort as string) || '-created_at',
       },

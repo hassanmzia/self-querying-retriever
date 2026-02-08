@@ -97,21 +97,37 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     });
 
     // Map backend response to frontend QueryResponse format
-    // Backend: { query_id, query, results, pipeline_used, execution_time_ms, agent_trace, expanded_query }
-    // Frontend: { query_id, query, results, total_results, retrieval_method, execution_time_ms, agent_trace, metadata }
+    // Backend results: { document_id, content, metadata, score }
+    // Frontend results: { id, document: { id, content, metadata, collection_id }, score, retrieval_method }
     const reverseMethodMap: Record<string, string> = { vanilla: 'vector' };
     const bd = backendRes.data || {};
-    const results = bd.results || [];
+    const rawResults = bd.results || [];
+    const mappedMethod = reverseMethodMap[bd.pipeline_used] || bd.pipeline_used || rawMethod;
+    const collectionId = (queryData as any).collection_id || backendPayload.collection_name;
+
+    const results = rawResults.map((r: any, idx: number) => ({
+      id: r.document_id || r.id || `result-${idx}`,
+      document: {
+        id: r.document_id || r.id || `doc-${idx}`,
+        content: r.content || r.document || '',
+        metadata: r.metadata || {},
+        collection_id: collectionId,
+      },
+      score: r.score ?? 0,
+      retrieval_method: mappedMethod,
+      highlights: r.highlights || [],
+    }));
+
     const frontendResponse = {
       query_id: bd.query_id,
       query: bd.query,
       results,
       total_results: results.length,
-      retrieval_method: reverseMethodMap[bd.pipeline_used] || bd.pipeline_used || rawMethod,
+      retrieval_method: mappedMethod,
       execution_time_ms: bd.execution_time_ms || 0,
       agent_trace: bd.agent_trace,
       metadata: {
-        collection_id: (queryData as any).collection_id || backendPayload.collection_name,
+        collection_id: collectionId,
         model_used: 'text-embedding-3-small',
         tokens_used: 0,
         cached: false,

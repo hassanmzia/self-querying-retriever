@@ -88,7 +88,8 @@ services:
       - sqr-network
     restart: unless-stopped
     command: >
-      sh -c "python manage.py migrate --noinput &&
+      sh -c "python manage.py makemigrations retriever documents analytics --noinput &&
+             python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput &&
              python manage.py seed_documents --no-input 2>/dev/null || true &&
              daphne -b 0.0.0.0 -p 8083 config.asgi:application"

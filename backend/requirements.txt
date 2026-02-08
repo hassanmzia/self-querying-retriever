@@ -29,7 +29,7 @@ langfuse==2.60.3
 langsmith==0.3.18
 
 # Vector store / Embeddings
-chromadb==1.0.9
+chromadb==0.6.3
 openai==1.68.2
 
 # Retrieval / Ranking

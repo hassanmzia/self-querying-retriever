@@ -13,7 +13,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import clsx from "clsx";
-import { usePipelines } from "@/hooks/useAnalytics";
+import { usePipelines, useCreatePipeline } from "@/hooks/useAnalytics";
 import Modal from "@/components/common/Modal";
 import Badge from "@/components/common/Badge";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -181,18 +181,32 @@ export default function Pipelines() {
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
 
-  // API hook
+  // API hooks
   const { data: apiPipelines, isLoading } = usePipelines();
-  const pipelines = apiPipelines ?? mockPipelines;
+  const createPipeline = useCreatePipeline();
+  const pipelines = apiPipelines && apiPipelines.length > 0 ? apiPipelines : mockPipelines;
 
   const activePipelines = pipelines.filter((p) => p.status === "active").length;
   const totalExecutions = pipelines.reduce((sum, p) => sum + p.executions_count, 0);
 
   const handleCreate = () => {
-    console.log("Creating pipeline:", { name: formName, description: formDescription });
-    setCreateModalOpen(false);
-    setFormName("");
-    setFormDescription("");
+    if (!formName.trim()) return;
+    createPipeline.mutate(
+      {
+        name: formName.trim(),
+        description: formDescription.trim(),
+        stages: [],
+        default_retrieval_method: RetrievalMethod.HYBRID,
+        is_active: true,
+      },
+      {
+        onSettled: () => {
+          setCreateModalOpen(false);
+          setFormName("");
+          setFormDescription("");
+        },
+      }
+    );
   };
 
   const handleToggleStatus = (pipeline: Pipeline) => {

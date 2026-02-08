@@ -4,7 +4,7 @@ version: "3.9"
 # AI Self-Querying Retriever - Docker Compose
 # =============================================================================
 # All services use non-default ports to avoid conflicts in multi-host env
-# Main site: http://172.168.1.95:3083
+# Main site: http://172.168.1.95:3088
 # =============================================================================
 
 services:
@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile
     container_name: sqr-frontend
     ports:
-      - "3083:3083"
+      - "3088:3083"
     environment:
       - VITE_API_URL=http://172.168.1.95:3087
       - VITE_WS_URL=ws://172.168.1.95:3087
@@ -42,7 +42,7 @@ services:
       - PORT=3084
       - DJANGO_BACKEND_URL=http://backend:8083
       - MCP_SERVER_URL=http://mcp-server:3086
-      - CORS_ORIGINS=http://172.168.1.95:3083,http://localhost:3083
+      - CORS_ORIGINS=http://172.168.1.95:3088,http://localhost:3088
       - NODE_ENV=production
       - LOG_LEVEL=info
       - RATE_LIMIT_WINDOW_MS=900000

@@ -56,7 +56,7 @@ export function registerDocumentResources(server: McpServer): void {
   server.resource(
     "collections-list",
     "documents://collections",
-    "List of all document collections with names, sizes, and descriptions.",
+    { description: "List of all document collections with names, sizes, and descriptions." },
     async (uri) => {
       try {
         logger.info("Resource read: documents://collections");
@@ -98,7 +98,7 @@ export function registerDocumentResources(server: McpServer): void {
   server.resource(
     "collection-detail",
     new ResourceTemplate("documents://collection/{id}", { list: undefined }),
-    "Detailed information about a specific collection including document count, embedding model, and timestamps.",
+    { description: "Detailed information about a specific collection including document count, embedding model, and timestamps." },
     async (uri, { id }) => {
       try {
         const collectionId = String(id);
@@ -143,7 +143,7 @@ export function registerDocumentResources(server: McpServer): void {
   server.resource(
     "search-results",
     new ResourceTemplate("documents://search/{query}", { list: undefined }),
-    "Search results for a given query using the default hybrid retrieval method.",
+    { description: "Search results for a given query using the default hybrid retrieval method." },
     async (uri, { query }) => {
       try {
         const queryStr = decodeURIComponent(String(query));
@@ -189,7 +189,7 @@ export function registerDocumentResources(server: McpServer): void {
   server.resource(
     "system-stats",
     "documents://stats",
-    "System-wide statistics: document counts, query volumes, storage usage, and uptime.",
+    { description: "System-wide statistics: document counts, query volumes, storage usage, and uptime." },
     async (uri) => {
       try {
         logger.info("Resource read: documents://stats");

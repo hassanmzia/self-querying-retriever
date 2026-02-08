@@ -71,7 +71,7 @@ export function registerRetrievalTools(server: McpServer): void {
         .default("hybrid")
         .describe("Retrieval method to use"),
       filters: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Metadata filters to apply (key-value pairs)"),
       top_k: z
@@ -243,7 +243,7 @@ export function registerRetrievalTools(server: McpServer): void {
         .optional()
         .describe("Human-readable description of the collection"),
       metadata: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Arbitrary metadata to attach to the collection"),
     },
@@ -291,7 +291,7 @@ export function registerRetrievalTools(server: McpServer): void {
       collection: z.string().describe("Target collection name or ID"),
       content: z.string().describe("Full text content of the document"),
       metadata: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Metadata key-value pairs (e.g. source, author, date)"),
       document_id: z
@@ -506,7 +506,7 @@ export function registerRetrievalTools(server: McpServer): void {
             id: z.string(),
             content: z.string(),
             score: z.number(),
-            metadata: z.record(z.unknown()).optional(),
+            metadata: z.record(z.string(), z.unknown()).optional(),
           }),
         )
         .describe("Array of search result objects to re-rank"),

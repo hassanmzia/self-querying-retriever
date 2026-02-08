@@ -70,9 +70,19 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       backendFilters = frontendFilters;
     }
 
+    // Map frontend RetrievalMethod enum values to backend choices
+    // Frontend: "vector" | "self_query" | "bm25" | "hybrid" | "hypothetical"
+    // Backend:  "vanilla" | "self_query" | "bm25" | "hybrid" | "hypothetical" | "reranked" | "compressed" | "expanded"
+    const methodMap: Record<string, string> = {
+      vector: 'vanilla',
+      VECTOR: 'vanilla',
+    };
+    const rawMethod = (queryData as any).retrieval_method || (queryData as any).method || 'hybrid';
+    const retrieval_method = methodMap[rawMethod] || rawMethod;
+
     const backendPayload = {
       query: queryData.query,
-      retrieval_method: (queryData as any).retrieval_method || (queryData as any).method || 'hybrid',
+      retrieval_method,
       collection_name: (queryData as any).collection_id || (queryData as any).collection || 'renewable_energy',
       top_k: options.top_k || (queryData as any).top_k || 5,
       use_reranking: augmentations.includes('reranking') || (queryData as any).rerank || false,

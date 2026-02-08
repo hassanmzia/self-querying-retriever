@@ -1,0 +1,77 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.Python
+env/
+venv/
+.venv/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+config.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Database
+*.sqlite3
+pgdata/
+
+# ChromaDB
+chroma_data/
+
+# Logs
+logs/
+*.log
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build
+frontend/build/
+frontend/dist/
+api-gateway/dist/
+mcp-server/dist/
+
+# Package locks (optional - uncomment to track)
+# package-lock.json
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Static files
+backend/staticfiles/
+backend/mediafiles/

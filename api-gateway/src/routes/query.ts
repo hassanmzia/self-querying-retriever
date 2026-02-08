@@ -107,14 +107,41 @@ router.get('/history', async (req: Request, res: Response, next: NextFunction) =
       query: req.query,
     });
 
-    await forwardResponse(req, res, '/api/v1/retriever/queries/', {
+    const page = parseInt((req.query.page as string) || '1', 10);
+    const pageSize = parseInt((req.query.page_size as string) || '20', 10);
+
+    const backendRes = await proxyRequest(req, '/api/v1/retriever/queries/', {
+      method: 'GET',
       params: {
-        page: (req.query.page as string) || '1',
-        page_size: (req.query.page_size as string) || '20',
+        page: String(page),
+        page_size: String(pageSize),
         method: (req.query.method as string) || '',
         date_from: (req.query.date_from as string) || '',
         date_to: (req.query.date_to as string) || '',
       },
+    });
+
+    // Map DRF pagination + field names to frontend PaginatedResponse<QueryHistoryItem>
+    const results = backendRes.data?.results || backendRes.data || [];
+    const total = backendRes.data?.count || (Array.isArray(results) ? results.length : 0);
+
+    const items = (Array.isArray(results) ? results : []).map((q: any) => ({
+      id: q.id,
+      query: q.query_text || q.query || '',
+      retrieval_method: q.retrieval_method || 'hybrid',
+      collection_id: q.collection_name || q.collection_id || '',
+      result_count: q.results_count ?? q.result_count ?? 0,
+      execution_time_ms: q.execution_time_ms || 0,
+      created_at: q.created_at || '',
+      augmentations: q.augmentations || [],
+    }));
+
+    res.status(backendRes.status).json({
+      data: items,
+      page,
+      page_size: pageSize,
+      total,
+      total_pages: Math.ceil(total / pageSize),
     });
   } catch (error) {
     next(error);

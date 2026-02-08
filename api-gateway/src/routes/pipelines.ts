@@ -6,6 +6,36 @@ import { AppError } from '../middleware/error-handler';
 const router = Router();
 
 /**
+ * Map a backend RetrievalPipeline object to the frontend Pipeline interface.
+ *
+ * Backend shape:  { id, name, description, pipeline_config, is_active, created_at }
+ * Frontend shape: { id, name, config: PipelineConfig, status, executions_count, avg_execution_time_ms, created_at, updated_at }
+ */
+function toFrontendPipeline(p: any): any {
+  const cfg = p.pipeline_config || {};
+  return {
+    id: p.id,
+    name: p.name,
+    config: {
+      id: p.id,
+      name: p.name,
+      description: p.description || '',
+      stages: cfg.stages || [],
+      default_retrieval_method: cfg.retrieval_method || 'hybrid',
+      default_collection_id: cfg.collection_name || '',
+      created_at: p.created_at || '',
+      updated_at: p.updated_at || p.created_at || '',
+      is_active: p.is_active !== undefined ? p.is_active : true,
+    },
+    status: p.is_active ? 'active' : 'inactive',
+    executions_count: p.executions_count || 0,
+    avg_execution_time_ms: p.avg_execution_time_ms || 0,
+    created_at: p.created_at || '',
+    updated_at: p.updated_at || p.created_at || '',
+  };
+}
+
+/**
  * GET /api/pipelines
  * List all pipelines with optional filtering by status.
  */
@@ -25,25 +55,11 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       },
     });
 
-    // Map backend pipeline objects to frontend PipelineConfig format
     const results = backendRes.data?.results || backendRes.data || [];
-    const pipelines = (Array.isArray(results) ? results : []).map((p: any) => {
-      const config = p.pipeline_config || {};
-      return {
-        ...p,
-        stages: config.stages || [],
-        default_retrieval_method: config.retrieval_method || 'hybrid',
-        default_collection_id: config.collection_name || '',
-        updated_at: p.updated_at || p.created_at || '',
-      };
-    });
+    const pipelines = (Array.isArray(results) ? results : []).map(toFrontendPipeline);
 
     res.status(backendRes.status).json({
       data: pipelines,
-      total: backendRes.data?.count || pipelines.length,
-      page: parseInt((req.query.page as string) || '1', 10),
-      page_size: parseInt((req.query.page_size as string) || '20', 10),
-      total_pages: Math.ceil((backendRes.data?.count || pipelines.length) / parseInt((req.query.page_size as string) || '20', 10)),
       status: backendRes.status,
     });
   } catch (error) {
@@ -53,7 +69,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 /**
  * POST /api/pipelines
- * Create a new pipeline with defined steps.
+ * Create a new pipeline. Frontend sends Partial<PipelineConfig>.
  */
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -68,7 +84,6 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     const stages = body.stages || body.steps || [];
 
     // Map frontend PipelineConfig to backend RetrievalPipelineSerializer format
-    // Backend expects: { name, description, pipeline_config: {...}, is_active }
     const backendPayload: Record<string, unknown> = {
       name: name.trim(),
       description: body.description || `${name.trim()} pipeline`,
@@ -91,19 +106,8 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       data: backendPayload,
     });
 
-    // Map backend response back to frontend PipelineConfig format
-    const pipelineData = backendRes.data;
-    const config = pipelineData.pipeline_config || {};
-    const frontendData = {
-      ...pipelineData,
-      stages: config.stages || [],
-      default_retrieval_method: config.retrieval_method || 'hybrid',
-      default_collection_id: config.collection_name || '',
-      updated_at: pipelineData.created_at || new Date().toISOString(),
-    };
-
     res.status(backendRes.status).json({
-      data: frontendData,
+      data: toFrontendPipeline(backendRes.data),
       status: backendRes.status,
     });
   } catch (error) {
@@ -112,8 +116,8 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * GET /api/v1/retriever/pipelines/:id
- * Get pipeline details including steps and execution history.
+ * GET /api/pipelines/:id
+ * Get pipeline details.
  */
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -128,18 +132,8 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       method: 'GET',
     });
 
-    const pipelineData = backendRes.data;
-    const config = pipelineData.pipeline_config || {};
-    const frontendData = {
-      ...pipelineData,
-      stages: config.stages || [],
-      default_retrieval_method: config.retrieval_method || 'hybrid',
-      default_collection_id: config.collection_name || '',
-      updated_at: pipelineData.created_at || new Date().toISOString(),
-    };
-
     res.status(backendRes.status).json({
-      data: frontendData,
+      data: toFrontendPipeline(backendRes.data),
       status: backendRes.status,
     });
   } catch (error) {
@@ -148,7 +142,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * PUT /api/v1/retriever/pipelines/:id
+ * PUT /api/pipelines/:id
  * Update an existing pipeline configuration.
  */
 router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
@@ -167,7 +161,6 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
     if (body.description !== undefined) backendPayload.description = body.description;
     if (body.is_active !== undefined) backendPayload.is_active = body.is_active;
 
-    // Build pipeline_config from frontend fields if stages or retrieval fields are present
     if (stages || body.default_retrieval_method || body.default_collection_id) {
       backendPayload.pipeline_config = {
         retrieval_method: body.default_retrieval_method || 'hybrid',
@@ -187,18 +180,8 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
       data: backendPayload,
     });
 
-    const pipelineData = backendRes.data;
-    const config = pipelineData.pipeline_config || {};
-    const frontendData = {
-      ...pipelineData,
-      stages: config.stages || [],
-      default_retrieval_method: config.retrieval_method || 'hybrid',
-      default_collection_id: config.collection_name || '',
-      updated_at: pipelineData.created_at || new Date().toISOString(),
-    };
-
     res.status(backendRes.status).json({
-      data: frontendData,
+      data: toFrontendPipeline(backendRes.data),
       status: backendRes.status,
     });
   } catch (error) {
@@ -207,7 +190,7 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * POST /api/v1/retriever/pipelines/:id/execute
+ * POST /api/pipelines/:id/execute
  * Execute a pipeline. Accepts optional input parameters.
  */
 router.post('/:id/execute', async (req: Request, res: Response, next: NextFunction) => {
@@ -226,9 +209,8 @@ router.post('/:id/execute', async (req: Request, res: Response, next: NextFuncti
     });
 
     res.status(backendRes.status).json({
-      success: backendRes.status >= 200 && backendRes.status < 300,
       data: backendRes.data,
-      timestamp: new Date().toISOString(),
+      status: backendRes.status,
     });
   } catch (error) {
     next(error);

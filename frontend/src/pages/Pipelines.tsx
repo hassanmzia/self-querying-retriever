@@ -18,6 +18,7 @@ import Modal from "@/components/common/Modal";
 import Badge from "@/components/common/Badge";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import EmptyState from "@/components/common/EmptyState";
+import { RetrievalMethod } from "@/types";
 import type { Pipeline } from "@/types";
 
 // ============================================================
@@ -39,7 +40,7 @@ const mockPipelines: Pipeline[] = [
         { id: "s3", name: "Reranker", type: "ranker", config: { model: "cross-encoder", top_n: 5 }, enabled: true, order: 3 },
         { id: "s4", name: "Answer Generator", type: "synthesizer", config: { model: "gpt-4o" }, enabled: true, order: 4 },
       ],
-      default_retrieval_method: "vector" as const,
+      default_retrieval_method: RetrievalMethod.VECTOR,
       created_at: "2024-11-15T10:00:00Z",
       updated_at: "2025-01-14T14:00:00Z",
       is_active: true,
@@ -66,7 +67,7 @@ const mockPipelines: Pipeline[] = [
         { id: "s9", name: "Reranker", type: "ranker", config: {}, enabled: true, order: 5 },
         { id: "s10", name: "Answer Generator", type: "synthesizer", config: {}, enabled: true, order: 6 },
       ],
-      default_retrieval_method: "hybrid" as const,
+      default_retrieval_method: RetrievalMethod.HYBRID,
       created_at: "2024-12-01T08:00:00Z",
       updated_at: "2025-01-13T09:30:00Z",
       is_active: true,
@@ -92,7 +93,7 @@ const mockPipelines: Pipeline[] = [
         { id: "s14", name: "Context Compressor", type: "augmenter", config: {}, enabled: false, order: 4 },
         { id: "s15", name: "Answer Generator", type: "synthesizer", config: {}, enabled: true, order: 5 },
       ],
-      default_retrieval_method: "self_query" as const,
+      default_retrieval_method: RetrievalMethod.SELF_QUERY,
       created_at: "2024-12-20T15:00:00Z",
       updated_at: "2025-01-12T11:45:00Z",
       is_active: true,
@@ -117,7 +118,7 @@ const mockPipelines: Pipeline[] = [
         { id: "s18", name: "Vector Retriever", type: "retriever", config: {}, enabled: true, order: 3 },
         { id: "s19", name: "Answer Generator", type: "synthesizer", config: {}, enabled: true, order: 4 },
       ],
-      default_retrieval_method: "hypothetical" as const,
+      default_retrieval_method: RetrievalMethod.HYPOTHETICAL,
       created_at: "2025-01-05T12:00:00Z",
       updated_at: "2025-01-14T08:20:00Z",
       is_active: false,
@@ -139,7 +140,7 @@ const mockPipelines: Pipeline[] = [
       stages: [
         { id: "s20", name: "BM25 Retriever", type: "retriever", config: {}, enabled: true, order: 1 },
       ],
-      default_retrieval_method: "bm25" as const,
+      default_retrieval_method: RetrievalMethod.BM25,
       created_at: "2025-01-08T14:00:00Z",
       updated_at: "2025-01-14T12:15:00Z",
       is_active: false,

@@ -16,6 +16,7 @@ import Badge from "@/components/common/Badge";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import EmptyState from "@/components/common/EmptyState";
 import Modal from "@/components/common/Modal";
+import { RetrievalMethod, AugmentationType } from "@/types";
 import type { QueryHistoryItem } from "@/types";
 
 // ============================================================
@@ -26,17 +27,17 @@ const mockHistory: QueryHistoryItem[] = [
   {
     id: "qh-1",
     query: "What are the latest trends in AI safety?",
-    retrieval_method: "self_query" as const,
+    retrieval_method: RetrievalMethod.SELF_QUERY,
     collection_id: "research-papers",
     result_count: 8,
     execution_time_ms: 142,
     created_at: "2025-01-14T14:32:00Z",
-    augmentations: ["reranking" as const],
+    augmentations: [AugmentationType.RERANKING],
   },
   {
     id: "qh-2",
     query: "Compare transformer architectures from 2024",
-    retrieval_method: "hybrid" as const,
+    retrieval_method: RetrievalMethod.HYBRID,
     collection_id: "research-papers",
     result_count: 12,
     execution_time_ms: 198,
@@ -46,17 +47,17 @@ const mockHistory: QueryHistoryItem[] = [
   {
     id: "qh-3",
     query: "RAG implementation best practices",
-    retrieval_method: "vector" as const,
+    retrieval_method: RetrievalMethod.VECTOR,
     collection_id: "tutorials",
     result_count: 5,
     execution_time_ms: 89,
     created_at: "2025-01-14T14:15:00Z",
-    augmentations: ["context_compression" as const],
+    augmentations: [AugmentationType.CONTEXT_COMPRESSION],
   },
   {
     id: "qh-4",
     query: "LangChain vs LlamaIndex performance benchmarks",
-    retrieval_method: "bm25" as const,
+    retrieval_method: RetrievalMethod.BM25,
     collection_id: "technical-docs",
     result_count: 3,
     execution_time_ms: 67,
@@ -66,17 +67,17 @@ const mockHistory: QueryHistoryItem[] = [
   {
     id: "qh-5",
     query: "Multi-agent systems for document retrieval",
-    retrieval_method: "hypothetical" as const,
+    retrieval_method: RetrievalMethod.HYPOTHETICAL,
     collection_id: "research-papers",
     result_count: 7,
     execution_time_ms: 312,
     created_at: "2025-01-14T13:55:00Z",
-    augmentations: ["reranking" as const, "query_expansion" as const],
+    augmentations: [AugmentationType.RERANKING, AugmentationType.QUERY_EXPANSION],
   },
   {
     id: "qh-6",
     query: "ChromaDB indexing strategies",
-    retrieval_method: "vector" as const,
+    retrieval_method: RetrievalMethod.VECTOR,
     collection_id: "technical-docs",
     result_count: 4,
     execution_time_ms: 95,
@@ -86,17 +87,17 @@ const mockHistory: QueryHistoryItem[] = [
   {
     id: "qh-7",
     query: "Self-querying retriever metadata filtering",
-    retrieval_method: "self_query" as const,
+    retrieval_method: RetrievalMethod.SELF_QUERY,
     collection_id: "research-papers",
     result_count: 6,
     execution_time_ms: 156,
     created_at: "2025-01-14T13:22:00Z",
-    augmentations: ["reranking" as const],
+    augmentations: [AugmentationType.RERANKING],
   },
   {
     id: "qh-8",
     query: "Embedding model comparison for technical docs",
-    retrieval_method: "hybrid" as const,
+    retrieval_method: RetrievalMethod.HYBRID,
     collection_id: "technical-docs",
     result_count: 10,
     execution_time_ms: 234,
@@ -106,17 +107,17 @@ const mockHistory: QueryHistoryItem[] = [
   {
     id: "qh-9",
     query: "Query expansion techniques overview",
-    retrieval_method: "vector" as const,
+    retrieval_method: RetrievalMethod.VECTOR,
     collection_id: "tutorials",
     result_count: 5,
     execution_time_ms: 112,
     created_at: "2025-01-14T12:45:00Z",
-    augmentations: ["query_expansion" as const],
+    augmentations: [AugmentationType.QUERY_EXPANSION],
   },
   {
     id: "qh-10",
     query: "ReRanker implementation with cross-encoders",
-    retrieval_method: "self_query" as const,
+    retrieval_method: RetrievalMethod.SELF_QUERY,
     collection_id: "research-papers",
     result_count: 9,
     execution_time_ms: 178,
@@ -126,7 +127,7 @@ const mockHistory: QueryHistoryItem[] = [
   {
     id: "qh-11",
     query: "How to fine-tune LLMs for domain-specific tasks",
-    retrieval_method: "vector" as const,
+    retrieval_method: RetrievalMethod.VECTOR,
     collection_id: "tutorials",
     result_count: 6,
     execution_time_ms: 103,
@@ -136,12 +137,12 @@ const mockHistory: QueryHistoryItem[] = [
   {
     id: "qh-12",
     query: "Vector database comparison: ChromaDB vs Pinecone vs Weaviate",
-    retrieval_method: "hybrid" as const,
+    retrieval_method: RetrievalMethod.HYBRID,
     collection_id: "technical-docs",
     result_count: 8,
     execution_time_ms: 215,
     created_at: "2025-01-13T15:45:00Z",
-    augmentations: ["reranking" as const],
+    augmentations: [AugmentationType.RERANKING],
   },
 ];
 

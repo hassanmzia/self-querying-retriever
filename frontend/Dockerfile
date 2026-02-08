@@ -16,6 +16,14 @@ RUN npm install --legacy-peer-deps
 # Copy source code
 COPY . .
 
+# Accept build-time env vars for Vite
+ARG VITE_API_URL=http://172.168.1.95:3087
+ARG VITE_WS_URL=ws://172.168.1.95:3087
+ARG VITE_APP_TITLE=AI Self-Querying Retriever
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_WS_URL=$VITE_WS_URL
+ENV VITE_APP_TITLE=$VITE_APP_TITLE
+
 # Build the application
 RUN npm run build
 

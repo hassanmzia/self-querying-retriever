@@ -80,6 +80,7 @@ services:
       - CHROMA_PORT=8583
       - LANGFUSE_HOST=http://langfuse:3085
     volumes:
+      - ./backend:/app
       - backend-static:/app/staticfiles
       - backend-media:/app/mediafiles
     depends_on:

@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import http from 'http';
 import { forwardResponse, proxyRequest } from '../services/proxy';
 import config from '../config';
 import logger from '../utils/logger';
@@ -38,28 +38,41 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 /**
  * POST /api/documents/upload
- * Upload a file (PDF, TXT, etc.) using stream proxy to preserve multipart data.
+ * Upload a file (PDF, TXT, etc.) by piping the raw multipart stream to the backend.
  */
-router.post(
-  '/upload',
-  createProxyMiddleware({
-    target: config.djangoBackendUrl,
-    changeOrigin: true,
-    pathRewrite: { '^/api/documents/upload': '/api/v1/documents/upload/' },
-    timeout: 120000,
-    proxyTimeout: 120000,
-    onError: (err, _req, res) => {
-      logger.error('File upload proxy error', { error: err.message });
-      if (res && !('headersSent' in res && res.headersSent)) {
-        (res as Response).status(502).json({
-          success: false,
-          error: 'Error uploading file to backend',
-          timestamp: new Date().toISOString(),
-        });
-      }
+router.post('/upload', (req: Request, res: Response) => {
+  const targetUrl = new URL(`${config.djangoBackendUrl}/api/v1/documents/upload/`);
+
+  const proxyReq = http.request(
+    {
+      hostname: targetUrl.hostname,
+      port: targetUrl.port,
+      path: targetUrl.pathname,
+      method: 'POST',
+      headers: {
+        ...req.headers,
+        host: `${targetUrl.hostname}:${targetUrl.port}`,
+      },
     },
-  })
-);
+    (proxyRes) => {
+      res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
+      proxyRes.pipe(res);
+    }
+  );
+
+  proxyReq.on('error', (err) => {
+    logger.error('File upload proxy error', { error: err.message });
+    if (!res.headersSent) {
+      res.status(502).json({
+        success: false,
+        error: 'Error uploading file to backend',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
+  req.pipe(proxyReq);
+});
 
 /**
  * POST /api/documents

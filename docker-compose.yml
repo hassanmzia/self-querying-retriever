@@ -242,7 +242,7 @@ services:
   # ChromaDB - Vector database
   # ---------------------------------------------------------------------------
   chromadb:
-    image: chromadb/chroma:0.6.3
+    image: chromadb/chroma:1.0.9
     container_name: sqr-chromadb
     ports:
       - "8583:8583"

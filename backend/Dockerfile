@@ -40,7 +40,7 @@ EXPOSE 8083
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:8083/api/health/ || exit 1
+    CMD curl -f http://localhost:8083/api/v1/retriever/health/ || exit 1
 
 # Default command (overridden in docker-compose)
 CMD ["daphne", "-b", "0.0.0.0", "-p", "8083", "config.asgi:application"]

@@ -1,0 +1,305 @@
+version: "3.9"
+
+# =============================================================================
+# AI Self-Querying Retriever - Docker Compose
+# =============================================================================
+# All services use non-default ports to avoid conflicts in multi-host env
+# Main site: http://172.168.1.95:3083
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Frontend - React/TypeScript (Main Entry Point)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sqr-frontend
+    ports:
+      - "3083:3083"
+    environment:
+      - VITE_API_URL=http://172.168.1.95:3084
+      - VITE_WS_URL=ws://172.168.1.95:3084
+      - VITE_APP_TITLE=AI Self-Querying Retriever
+    depends_on:
+      - api-gateway
+    networks:
+      - sqr-network
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # API Gateway - Node.js/TypeScript
+  # ---------------------------------------------------------------------------
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: sqr-api-gateway
+    ports:
+      - "3084:3084"
+    environment:
+      - PORT=3084
+      - DJANGO_BACKEND_URL=http://backend:8083
+      - MCP_SERVER_URL=http://mcp-server:3086
+      - CORS_ORIGINS=http://172.168.1.95:3083,http://localhost:3083
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX=200
+    depends_on:
+      - backend
+      - mcp-server
+    networks:
+      - sqr-network
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Backend - Django/Python
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sqr-backend
+    ports:
+      - "8083:8083"
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5483
+      - REDIS_URL=redis://redis:6383/0
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8583
+      - LANGFUSE_HOST=http://langfuse:3085
+    volumes:
+      - backend-static:/app/staticfiles
+      - backend-media:/app/mediafiles
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    networks:
+      - sqr-network
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             python manage.py seed_documents --no-input 2>/dev/null || true &&
+             daphne -b 0.0.0.0 -p 8083 config.asgi:application"
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker - Background task processing
+  # ---------------------------------------------------------------------------
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sqr-celery-worker
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5483
+      - REDIS_URL=redis://redis:6383/0
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8583
+      - CELERY_BROKER_URL=redis://redis:6383/1
+      - CELERY_RESULT_BACKEND=redis://redis:6383/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sqr-network
+    restart: unless-stopped
+    command: celery -A config.celery_app worker -l info -c 4
+
+  # ---------------------------------------------------------------------------
+  # Celery Beat - Periodic tasks scheduler
+  # ---------------------------------------------------------------------------
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sqr-celery-beat
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5483
+      - REDIS_URL=redis://redis:6383/0
+      - CELERY_BROKER_URL=redis://redis:6383/1
+      - CELERY_RESULT_BACKEND=redis://redis:6383/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sqr-network
+    restart: unless-stopped
+    command: celery -A config.celery_app beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+  # ---------------------------------------------------------------------------
+  # Celery Flower - Task monitoring dashboard
+  # ---------------------------------------------------------------------------
+  celery-flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sqr-celery-flower
+    ports:
+      - "5583:5583"
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6383/1
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - sqr-network
+    restart: unless-stopped
+    command: celery -A config.celery_app flower --port=5583 --broker=redis://redis:6383/1
+
+  # ---------------------------------------------------------------------------
+  # MCP Server - Model Context Protocol
+  # ---------------------------------------------------------------------------
+  mcp-server:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    container_name: sqr-mcp-server
+    ports:
+      - "3086:3086"
+    environment:
+      - PORT=3086
+      - DJANGO_BACKEND_URL=http://backend:8083
+      - LOG_LEVEL=info
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      - sqr-network
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: sqr-postgres
+    ports:
+      - "5483:5483"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-sqr_db}
+      - POSTGRES_USER=${POSTGRES_USER:-sqr_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-sqr_secure_password_change_me}
+      - PGPORT=5483
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sqr_user} -d ${POSTGRES_DB:-sqr_db} -p 5483"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sqr-network
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Redis - Cache, message broker, result backend
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: sqr-redis
+    ports:
+      - "6383:6383"
+    command: redis-server --port 6383 --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6383", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sqr-network
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # ChromaDB - Vector database
+  # ---------------------------------------------------------------------------
+  chromadb:
+    image: chromadb/chroma:0.6.3
+    container_name: sqr-chromadb
+    ports:
+      - "8583:8583"
+    environment:
+      - CHROMA_SERVER_HTTP_PORT=8583
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ANONYMIZED_TELEMETRY=FALSE
+    volumes:
+      - chroma-data:/chroma/chroma
+    networks:
+      - sqr-network
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # LangFuse - LLM Observability (Self-hosted)
+  # ---------------------------------------------------------------------------
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: sqr-langfuse
+    ports:
+      - "3085:3085"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-sqr_user}:${POSTGRES_PASSWORD:-sqr_secure_password_change_me}@postgres:5483/${POSTGRES_DB:-sqr_db}
+      - NEXTAUTH_SECRET=${LANGFUSE_NEXTAUTH_SECRET:-langfuse-nextauth-secret-change-me}
+      - NEXTAUTH_URL=http://172.168.1.95:3085
+      - SALT=${LANGFUSE_SALT:-langfuse-salt-change-me}
+      - TELEMETRY_ENABLED=false
+      - PORT=3085
+      - HOSTNAME=0.0.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sqr-network
+    restart: unless-stopped
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  pgdata:
+    driver: local
+  redis-data:
+    driver: local
+  chroma-data:
+    driver: local
+  backend-static:
+    driver: local
+  backend-media:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  sqr-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

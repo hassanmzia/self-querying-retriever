@@ -1,0 +1,48 @@
+# Django core
+django==5.1.6
+djangorestframework==3.15.2
+django-cors-headers==4.6.0
+django-filter==24.3
+gunicorn==23.0.0
+
+# ASGI / WebSocket
+channels==4.2.0
+daphne==4.1.2
+
+# Database
+psycopg2-binary==2.9.10
+
+# Cache / Task queue
+redis==5.2.1
+celery==5.4.0
+django-celery-results==2.5.1
+django-celery-beat==2.7.0
+
+# LangChain ecosystem
+langchain==0.3.21
+langchain-community==0.3.20
+langchain_openai==0.3.11
+langchain-chroma==0.2.4
+langgraph==0.3.30
+langfuse==2.60.3
+langsmith==0.3.18
+
+# Vector store / Embeddings
+chromadb==0.6.3
+openai==1.66.3
+
+# Retrieval / Ranking
+rank_bm25==0.2.2
+sentence-transformers==3.4.1
+
+# Data processing
+numpy==2.2.3
+scipy==1.15.2
+lark==1.2.2
+
+# Utilities
+python-dotenv==1.0.1
+requests==2.32.3
+tiktoken==0.8.0
+pydantic==2.10.6
+pydantic-settings==2.8.1

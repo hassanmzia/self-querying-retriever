@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-surface-700;
+  }
+
+  html {
+    @apply scroll-smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-surface-950 text-surface-200 font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-500;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-brand-600/40 text-white;
+  }
+}
+
+@layer components {
+  /* Card component */
+  .card {
+    @apply bg-surface-900 border border-surface-700/50 rounded-xl shadow-lg;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:border-brand-600/30 hover:shadow-glow;
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    @apply bg-surface-900/80 backdrop-blur-xl border border-surface-700/30;
+  }
+
+  /* Input fields */
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-surface-800 border border-surface-600/50 rounded-lg
+           text-surface-100 placeholder-surface-400
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500
+           transition-all duration-200;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           bg-brand-600 hover:bg-brand-500 active:bg-brand-700
+           text-white font-medium rounded-lg
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:ring-offset-2 focus:ring-offset-surface-900
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           bg-surface-700 hover:bg-surface-600 active:bg-surface-800
+           text-surface-200 font-medium rounded-lg border border-surface-600
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-surface-500/50 focus:ring-offset-2 focus:ring-offset-surface-900
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           hover:bg-surface-800 active:bg-surface-700
+           text-surface-300 hover:text-surface-100 font-medium rounded-lg
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-surface-500/50;
+  }
+
+  /* Badge/Tag */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-brand {
+    @apply badge bg-brand-600/20 text-brand-300 border border-brand-500/30;
+  }
+
+  .badge-success {
+    @apply badge bg-emerald-600/20 text-emerald-300 border border-emerald-500/30;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-600/20 text-amber-300 border border-amber-500/30;
+  }
+
+  .badge-error {
+    @apply badge bg-red-600/20 text-red-300 border border-red-500/30;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply card p-5 flex flex-col gap-2;
+  }
+
+  /* Sidebar nav link */
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           text-surface-400 hover:text-surface-100 hover:bg-surface-800
+           transition-all duration-200;
+  }
+
+  .nav-link-active {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           text-brand-300 bg-brand-600/10 border border-brand-500/20;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply w-5 h-5 border-2 border-surface-600 border-t-brand-400 rounded-full animate-spin;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-400 to-cyan-300 bg-clip-text text-transparent;
+  }
+
+  /* Pulse dot */
+  .pulse-dot {
+    @apply relative flex h-3 w-3;
+  }
+
+  .pulse-dot::before {
+    @apply absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75 animate-ping;
+    content: "";
+  }
+
+  .pulse-dot::after {
+    @apply relative inline-flex rounded-full h-3 w-3 bg-brand-500;
+    content: "";
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-in {
+    animation: animateIn 0.3s ease-out;
+  }
+
+  @keyframes animateIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Mermaid diagram styling overrides */
+.mermaid {
+  @apply bg-transparent;
+}
+
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node polygon {
+  fill: #1e293b;
+  stroke: #0891b2;
+  stroke-width: 1.5px;
+}
+
+.mermaid .edgePath .path {
+  stroke: #475569;
+  stroke-width: 1.5px;
+}
+
+.mermaid .edgeLabel {
+  background-color: #0f172a;
+  color: #94a3b8;
+}
+
+.mermaid text {
+  fill: #e2e8f0;
+  font-family: "Inter", sans-serif;
+}
+
+/* Highlight.js overrides for dark theme */
+.hljs {
+  @apply bg-surface-900 text-surface-200 rounded-lg p-4;
+}
+
+/* React Hot Toast custom styling */
+[data-sonner-toaster] {
+  --normal-bg: #1e293b;
+  --normal-border: #334155;
+  --normal-text: #e2e8f0;
+}

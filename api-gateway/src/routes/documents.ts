@@ -45,7 +45,7 @@ router.post(
   createProxyMiddleware({
     target: config.djangoBackendUrl,
     changeOrigin: true,
-    pathRewrite: { '^/upload': '/api/v1/documents/upload/' },
+    pathRewrite: { '^/api/documents/upload': '/api/v1/documents/upload/' },
     timeout: 120000,
     proxyTimeout: 120000,
     onError: (err, _req, res) => {

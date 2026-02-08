@@ -427,6 +427,18 @@ class AgentExecutionViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ["status", "agent_name"]
     ordering_fields = ["created_at", "execution_time_ms"]
 
+    @action(detail=False, methods=["get"])
+    def graph(self, request):
+        """Return the agent workflow graph for visualization."""
+        from .agents.visualization import get_agent_flow_diagram
+
+        fmt = request.query_params.get("format", "mermaid")
+        data = get_agent_flow_diagram()
+
+        if fmt == "mermaid":
+            return Response({"mermaid": data["mermaid"], "description": data["description"]})
+        return Response(data)
+
     @action(detail=True, methods=["post"])
     def replay(self, request, pk=None):
         """Re-run an agent execution with the same parameters."""

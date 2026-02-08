@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { analyticsApi, agentApi, pipelineApi } from "../services/api";
-import type { AnalyticsTimeRange } from "../types";
+import type { AnalyticsTimeRange, PipelineConfig } from "../types";
 
 // ============================================================
 // Query Keys
@@ -152,5 +152,19 @@ export function usePipeline(pipelineId: string) {
     queryFn: () => pipelineApi.get(pipelineId),
     enabled: !!pipelineId,
     staleTime: 30000,
+  });
+}
+
+// ============================================================
+// useCreatePipeline - Create a new pipeline
+// ============================================================
+
+export function useCreatePipeline() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (config: Partial<PipelineConfig>) => pipelineApi.create(config),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.list() });
+    },
   });
 }

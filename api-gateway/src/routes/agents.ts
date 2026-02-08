@@ -64,6 +64,9 @@ router.get('/graph/image', async (req: Request, res: Response, next: NextFunctio
 /**
  * GET /api/agents/executions
  * List agent executions with optional pagination and filtering.
+ *
+ * The backend stores one record per agent-per-query, but the frontend
+ * expects records grouped by query with an ``agents`` array.
  */
 router.get('/executions', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -72,7 +75,7 @@ router.get('/executions', async (req: Request, res: Response, next: NextFunction
       query: req.query,
     });
 
-    await forwardResponse(req, res, '/api/v1/retriever/agent-executions/', {
+    const backendRes = await proxyRequest(req, '/api/v1/retriever/agent-executions/', {
       params: {
         page: (req.query.page as string) || '1',
         page_size: (req.query.page_size as string) || '20',
@@ -81,6 +84,46 @@ router.get('/executions', async (req: Request, res: Response, next: NextFunction
         date_from: (req.query.date_from as string) || '',
         date_to: (req.query.date_to as string) || '',
       },
+    });
+
+    const body = backendRes.data || {};
+    // Backend uses FrontendPagination → { data: [...], total, page, page_size, total_pages }
+    const rawItems: any[] = body.data ?? body.results ?? [];
+
+    // Group individual agent records by query id
+    const grouped: Record<string, any> = {};
+    for (const item of rawItems) {
+      const queryId = item.query || item.id;
+      if (!grouped[queryId]) {
+        grouped[queryId] = {
+          execution_id: item.id,
+          query_id: item.query || '',
+          agents: [],
+          graph_definition: '',
+          started_at: item.created_at || '',
+          completed_at: item.created_at || '',
+          total_duration_ms: 0,
+          status: item.status || 'completed',
+        };
+      }
+      const group = grouped[queryId];
+      group.agents.push({
+        agent_id: item.agent_name || item.id,
+        status: item.status || 'completed',
+        duration_ms: item.execution_time_ms ?? null,
+        started_at: item.created_at || '',
+      });
+      group.total_duration_ms += item.execution_time_ms || 0;
+    }
+
+    const mappedItems = Object.values(grouped);
+
+    res.status(backendRes.status).json({
+      data: mappedItems,
+      total: mappedItems.length,
+      page: body.page ?? 1,
+      page_size: body.page_size ?? 20,
+      total_pages: body.total_pages ?? 1,
     });
   } catch (error) {
     next(error);

@@ -33,9 +33,19 @@ def process_document_upload(self, document_ids: list[str], collection_name: str)
     )
 
     try:
+        from langchain.text_splitter import RecursiveCharacterTextSplitter
+
         chroma_service = ChromaDBService()
         documents = Document.objects.filter(id__in=document_ids).select_related(
             "structured_metadata"
+        )
+
+        # Chunk size ~1500 chars keeps each chunk well under the 8192
+        # token limit of common OpenAI embedding models.
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1500,
+            chunk_overlap=200,
+            length_function=len,
         )
 
         texts = []
@@ -43,15 +53,19 @@ def process_document_upload(self, document_ids: list[str], collection_name: str)
         ids = []
 
         for doc in documents:
-            texts.append(doc.content)
             meta = doc.metadata_json.copy() if doc.metadata_json else {}
             if hasattr(doc, "structured_metadata"):
                 sm = doc.structured_metadata
                 meta["year"] = sm.year
                 meta["topics"] = sm.topics
                 meta["subtopic"] = sm.subtopic
-            metadatas.append(meta)
-            ids.append(str(doc.id))
+
+            chunks = splitter.split_text(doc.content)
+            for chunk_idx, chunk in enumerate(chunks):
+                texts.append(chunk)
+                chunk_meta = {**meta, "document_id": str(doc.id), "chunk_index": chunk_idx}
+                metadatas.append(chunk_meta)
+                ids.append(f"{doc.id}_chunk_{chunk_idx}")
 
         chroma_service.add_documents(
             collection_name=collection_name,
@@ -280,10 +294,18 @@ def reindex_collection(self, collection_name: str):
     logger.info("Reindexing collection '%s'.", collection_name)
 
     try:
+        from langchain.text_splitter import RecursiveCharacterTextSplitter
+
         chroma_service = ChromaDBService()
 
         # Delete existing collection.
         chroma_service.delete_collection(collection_name)
+
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1500,
+            chunk_overlap=200,
+            length_function=len,
+        )
 
         # Re-create and populate.
         documents = Document.objects.filter(
@@ -301,15 +323,19 @@ def reindex_collection(self, collection_name: str):
             ids = []
 
             for doc in batch:
-                texts.append(doc.content)
                 meta = doc.metadata_json.copy() if doc.metadata_json else {}
                 if hasattr(doc, "structured_metadata"):
                     sm = doc.structured_metadata
                     meta["year"] = sm.year
                     meta["topics"] = sm.topics
                     meta["subtopic"] = sm.subtopic
-                metadatas.append(meta)
-                ids.append(str(doc.id))
+
+                chunks = splitter.split_text(doc.content)
+                for chunk_idx, chunk in enumerate(chunks):
+                    texts.append(chunk)
+                    chunk_meta = {**meta, "document_id": str(doc.id), "chunk_index": chunk_idx}
+                    metadatas.append(chunk_meta)
+                    ids.append(f"{doc.id}_chunk_{chunk_idx}")
 
             chroma_service.add_documents(
                 collection_name=collection_name,

@@ -7,9 +7,9 @@
 
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "composite": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
 
     "strict": true,
     "noUnusedLocals": true,

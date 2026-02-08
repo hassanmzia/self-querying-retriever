@@ -13,11 +13,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     logger.debug('Listing agents', { requestId: req.requestId });
 
-    await forwardResponse(req, res, '/api/v1/retriever/agent-executions/', {
-      params: {
-        status: (req.query.status as string) || '',
-      },
-    });
+    await forwardResponse(req, res, '/api/v1/retriever/agents/');
   } catch (error) {
     next(error);
   }

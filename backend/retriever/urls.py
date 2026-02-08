@@ -30,5 +30,10 @@ urlpatterns = [
         views.AgentGraphView.as_view(),
         name="agent-graph",
     ),
+    path(
+        "agents/",
+        views.AgentListView.as_view(),
+        name="agent-list",
+    ),
     path("", include(router.urls)),
 ]

@@ -8,17 +8,22 @@ from django.contrib import admin
 from django.urls import include, path
 
 from retriever.a2a.views import A2ADiscoveryView
-from retriever.views import AgentGraphView
+from retriever.views import AgentGraphView, AgentListView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    # Agent graph must be before the retriever include to avoid router's
-    # <pk> catch-all matching "graph" as a primary key.
+    # Agent endpoints must be before the retriever include to avoid
+    # router's <pk> catch-all matching "graph" as a primary key.
     path(
         "api/v1/retriever/agent-executions/graph/",
         AgentGraphView.as_view(),
         name="agent-graph",
+    ),
+    path(
+        "api/v1/retriever/agents/",
+        AgentListView.as_view(),
+        name="agent-list",
     ),
 
     path("api/v1/retriever/", include("retriever.urls")),

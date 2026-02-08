@@ -118,7 +118,7 @@ app.get('/health', async (_req, res) => {
   let backendHealth: ServiceHealth = { status: 'unknown' };
   try {
     const backendStart = Date.now();
-    const backendRes = await axios.get(`${config.djangoBackendUrl}/health/`, {
+    const backendRes = await axios.get(`${config.djangoBackendUrl}/api/v1/retriever/health/`, {
       timeout: 5000,
     });
     backendHealth = {

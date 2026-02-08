@@ -13,7 +13,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     logger.debug('Listing agents', { requestId: req.requestId });
 
-    await forwardResponse(req, res, '/api/agents/', {
+    await forwardResponse(req, res, '/api/v1/retriever/agent-executions/', {
       params: {
         status: (req.query.status as string) || '',
       },
@@ -32,7 +32,7 @@ router.get('/graph', async (req: Request, res: Response, next: NextFunction) => 
   try {
     logger.debug('Fetching agent graph', { requestId: req.requestId });
 
-    await forwardResponse(req, res, '/api/agents/graph/', {
+    await forwardResponse(req, res, '/api/v1/retriever/agent-executions/graph/', {
       params: {
         format: (req.query.format as string) || 'mermaid',
       },
@@ -56,7 +56,7 @@ router.get('/graph/image', async (req: Request, res: Response, next: NextFunctio
       format,
     });
 
-    const backendRes = await proxyRequest(req, '/api/agents/graph/image/', {
+    const backendRes = await proxyRequest(req, '/api/v1/retriever/agent-executions/graph/image/', {
       params: { format },
       responseType: 'arraybuffer',
     });
@@ -80,7 +80,7 @@ router.get('/executions', async (req: Request, res: Response, next: NextFunction
       query: req.query,
     });
 
-    await forwardResponse(req, res, '/api/agents/executions/', {
+    await forwardResponse(req, res, '/api/v1/retriever/agent-executions/', {
       params: {
         page: (req.query.page as string) || '1',
         page_size: (req.query.page_size as string) || '20',
@@ -108,7 +108,7 @@ router.get('/executions/:id', async (req: Request, res: Response, next: NextFunc
       executionId: id,
     });
 
-    await forwardResponse(req, res, `/api/agents/executions/${id}/`);
+    await forwardResponse(req, res, `/api/v1/retriever/agent-executions/${id}/`);
   } catch (error) {
     next(error);
   }
@@ -138,7 +138,7 @@ router.get('/:name', async (req: Request, res: Response, next: NextFunction) => 
       agentName: name,
     });
 
-    await forwardResponse(req, res, `/api/agents/${encodeURIComponent(name)}/`);
+    await forwardResponse(req, res, `/api/v1/retriever/agent-executions/${encodeURIComponent(name)}/`);
   } catch (error) {
     next(error);
   }

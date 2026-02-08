@@ -16,7 +16,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       query: req.query,
     });
 
-    await forwardResponse(req, res, '/api/pipelines/', {
+    await forwardResponse(req, res, '/api/v1/retriever/pipelines/', {
       params: {
         page: (req.query.page as string) || '1',
         page_size: (req.query.page_size as string) || '20',
@@ -66,7 +66,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       stepCount: steps.length,
     });
 
-    const backendRes = await proxyRequest(req, '/api/pipelines/', {
+    const backendRes = await proxyRequest(req, '/api/v1/retriever/pipelines/', {
       method: 'POST',
       data: req.body,
     });
@@ -82,7 +82,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * GET /api/pipelines/:id
+ * GET /api/v1/retriever/pipelines/:id
  * Get pipeline details including steps and execution history.
  */
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
@@ -94,14 +94,14 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       pipelineId: id,
     });
 
-    await forwardResponse(req, res, `/api/pipelines/${id}/`);
+    await forwardResponse(req, res, `/api/v1/retriever/pipelines/${id}/`);
   } catch (error) {
     next(error);
   }
 });
 
 /**
- * PUT /api/pipelines/:id
+ * PUT /api/v1/retriever/pipelines/:id
  * Update an existing pipeline configuration.
  */
 router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
@@ -118,7 +118,7 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
       fields: Object.keys(req.body),
     });
 
-    const backendRes = await proxyRequest(req, `/api/pipelines/${id}/`, {
+    const backendRes = await proxyRequest(req, `/api/v1/retriever/pipelines/${id}/`, {
       method: 'PUT',
       data: req.body,
     });
@@ -134,7 +134,7 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * POST /api/pipelines/:id/execute
+ * POST /api/v1/retriever/pipelines/:id/execute
  * Execute a pipeline. Accepts optional input parameters.
  */
 router.post('/:id/execute', async (req: Request, res: Response, next: NextFunction) => {
@@ -147,7 +147,7 @@ router.post('/:id/execute', async (req: Request, res: Response, next: NextFuncti
       hasInput: Object.keys(req.body || {}).length > 0,
     });
 
-    const backendRes = await proxyRequest(req, `/api/pipelines/${id}/execute/`, {
+    const backendRes = await proxyRequest(req, `/api/v1/retriever/pipelines/${id}/execute/`, {
       method: 'POST',
       data: req.body || {},
     });

@@ -6,7 +6,7 @@ import { AppError } from '../middleware/error-handler';
 const router = Router();
 
 /**
- * GET /api/analytics/dashboard
+ * GET /api/v1/analytics/dashboard
  * Get dashboard statistics: total queries, documents, collections,
  * average processing time, recent activity, and top methods.
  */
@@ -14,14 +14,14 @@ router.get('/dashboard', async (req: Request, res: Response, next: NextFunction)
   try {
     logger.debug('Fetching dashboard stats', { requestId: req.requestId });
 
-    await forwardResponse(req, res, '/api/analytics/dashboard/');
+    await forwardResponse(req, res, '/api/v1/analytics/dashboard/');
   } catch (error) {
     next(error);
   }
 });
 
 /**
- * GET /api/analytics/trends
+ * GET /api/v1/analytics/trends
  * Get query trends over time.
  * Query parameters: period (day|week|month), date_from, date_to
  */
@@ -32,7 +32,7 @@ router.get('/trends', async (req: Request, res: Response, next: NextFunction) =>
       period: req.query.period,
     });
 
-    await forwardResponse(req, res, '/api/analytics/trends/', {
+    await forwardResponse(req, res, '/api/v1/analytics/trends/', {
       params: {
         period: (req.query.period as string) || 'day',
         date_from: (req.query.date_from as string) || '',
@@ -46,14 +46,14 @@ router.get('/trends', async (req: Request, res: Response, next: NextFunction) =>
 });
 
 /**
- * GET /api/analytics/methods
+ * GET /api/v1/analytics/methods
  * Compare performance and usage across retrieval methods.
  */
 router.get('/methods', async (req: Request, res: Response, next: NextFunction) => {
   try {
     logger.debug('Fetching method comparison', { requestId: req.requestId });
 
-    await forwardResponse(req, res, '/api/analytics/methods/', {
+    await forwardResponse(req, res, '/api/v1/analytics/methods/', {
       params: {
         date_from: (req.query.date_from as string) || '',
         date_to: (req.query.date_to as string) || '',
@@ -65,7 +65,7 @@ router.get('/methods', async (req: Request, res: Response, next: NextFunction) =
 });
 
 /**
- * GET /api/analytics/export
+ * GET /api/v1/analytics/export
  * Export analytics data in CSV or JSON format.
  * Query parameters: format (csv|json), type (queries|documents|analytics),
  * date_from, date_to
@@ -97,7 +97,7 @@ router.get('/export', async (req: Request, res: Response, next: NextFunction) =>
       type: exportType,
     });
 
-    const backendRes = await proxyRequest(req, '/api/analytics/export/', {
+    const backendRes = await proxyRequest(req, '/api/v1/analytics/export/', {
       params: {
         format,
         type: exportType,

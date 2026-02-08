@@ -108,10 +108,13 @@ class DocumentUploadView(APIView):
 
         return Response(
             {
-                "id": str(doc.id),
-                "status": "queued",
-                "chunks_created": 0,
-                "collection_id": doc.collection_name,
+                "data": {
+                    "id": str(doc.id),
+                    "status": "queued",
+                    "chunks_created": 0,
+                    "collection_id": doc.collection_name,
+                },
+                "status": 202,
                 "message": "Document created and queued for indexing.",
             },
             status=status.HTTP_202_ACCEPTED,
@@ -163,10 +166,13 @@ class DocumentUploadView(APIView):
 
         return Response(
             {
-                "id": str(doc.id),
-                "status": "queued",
-                "chunks_created": 0,
-                "collection_id": collection_name,
+                "data": {
+                    "id": str(doc.id),
+                    "status": "queued",
+                    "chunks_created": 0,
+                    "collection_id": collection_name,
+                },
+                "status": 202,
                 "message": "Document uploaded and queued for indexing.",
             },
             status=status.HTTP_202_ACCEPTED,

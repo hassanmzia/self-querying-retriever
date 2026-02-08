@@ -5,11 +5,13 @@ Handles document uploads (single and bulk), collection management,
 and document preview.
 """
 
+import json
 import logging
 
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -72,9 +74,18 @@ class DocumentUploadView(APIView):
     ``POST /api/v1/documents/upload/``
 
     Upload a single document and queue it for indexing.
+    Accepts either a file upload (multipart) or JSON body with title/content.
     """
 
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
     def post(self, request):
+        uploaded_file = request.FILES.get("file")
+
+        if uploaded_file:
+            return self._handle_file_upload(request, uploaded_file)
+
+        # JSON body upload (original flow).
         serializer = SingleDocumentUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -93,19 +104,96 @@ class DocumentUploadView(APIView):
             subtopic=data.get("subtopic", ""),
         )
 
-        # Queue async indexing.
-        process_document_upload.delay(
-            [str(doc.id)], doc.collection_name
-        )
+        process_document_upload.delay([str(doc.id)], doc.collection_name)
 
         return Response(
             {
+                "id": str(doc.id),
                 "status": "queued",
-                "document_id": str(doc.id),
+                "chunks_created": 0,
+                "collection_id": doc.collection_name,
                 "message": "Document created and queued for indexing.",
             },
             status=status.HTTP_202_ACCEPTED,
         )
+
+    def _handle_file_upload(self, request, uploaded_file):
+        """Extract text from an uploaded file, create a Document, and queue indexing."""
+        title = request.data.get("title", "") or uploaded_file.name
+        collection_name = (
+            request.data.get("collection_id", "")
+            or request.data.get("collection_name", "")
+            or "renewable_energy"
+        )
+
+        # Parse metadata JSON string from multipart form.
+        metadata = {}
+        raw_metadata = request.data.get("metadata", "")
+        if raw_metadata:
+            try:
+                metadata = json.loads(raw_metadata) if isinstance(raw_metadata, str) else raw_metadata
+            except (json.JSONDecodeError, TypeError):
+                metadata = {}
+
+        try:
+            content = self._extract_content(uploaded_file)
+        except Exception as exc:
+            logger.error("Failed to extract content from %s: %s", uploaded_file.name, exc)
+            return Response(
+                {"error": f"Could not extract text from file: {exc}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not content.strip():
+            return Response(
+                {"error": "No text content could be extracted from the file."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        doc = Document.objects.create(
+            title=title,
+            content=content,
+            source=uploaded_file.name,
+            collection_name=collection_name,
+            metadata_json=metadata,
+        )
+        DocumentMetadata.objects.create(document=doc)
+
+        process_document_upload.delay([str(doc.id)], doc.collection_name)
+
+        return Response(
+            {
+                "id": str(doc.id),
+                "status": "queued",
+                "chunks_created": 0,
+                "collection_id": collection_name,
+                "message": "Document uploaded and queued for indexing.",
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+    @staticmethod
+    def _extract_content(uploaded_file) -> str:
+        """Extract text content from an uploaded file based on its extension."""
+        name = uploaded_file.name.lower()
+
+        if name.endswith(".pdf"):
+            from pypdf import PdfReader
+
+            reader = PdfReader(uploaded_file)
+            pages = [page.extract_text() or "" for page in reader.pages]
+            return "\n".join(pages)
+
+        if name.endswith(".json"):
+            raw = uploaded_file.read()
+            data = json.loads(raw)
+            return json.dumps(data, indent=2)
+
+        # Plain text formats: .txt, .md, .csv, etc.
+        raw = uploaded_file.read()
+        if isinstance(raw, bytes):
+            return raw.decode("utf-8", errors="replace")
+        return raw
 
 
 class BulkDocumentUploadView(APIView):

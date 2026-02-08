@@ -111,7 +111,8 @@ class ChromaDBService:
     def list_collections(self) -> list[str]:
         """Return names of all existing collections."""
         collections = self.client.list_collections()
-        return [c.name for c in collections]
+        # chromadb 1.0.x may return strings or Collection objects.
+        return [c if isinstance(c, str) else c.name for c in collections]
 
     # ------------------------------------------------------------------
     # Document operations

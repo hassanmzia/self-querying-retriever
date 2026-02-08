@@ -23,7 +23,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application code (cache-bust: agent-graph-view)
+# Copy application code (cache-bust: chromadb-1.0.9)
 COPY . .
 
 # Create directories for static and media files

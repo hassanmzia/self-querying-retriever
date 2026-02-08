@@ -29,7 +29,7 @@ langfuse==2.60.3
 langsmith==0.3.18
 
 # Vector store / Embeddings
-chromadb==0.6.3
+chromadb==1.0.9
 openai==1.68.2
 
 # Retrieval / Ranking
@@ -40,6 +40,9 @@ sentence-transformers==3.4.1
 numpy==2.2.3
 scipy==1.15.2
 lark==1.2.2
+
+# Document parsing
+pypdf==5.4.0
 
 # Utilities
 python-dotenv==1.0.1

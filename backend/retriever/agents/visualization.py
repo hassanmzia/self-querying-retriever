@@ -47,7 +47,6 @@ def generate_mermaid_diagram(graph: Optional[Any] = None) -> str:
 
 
 _STATIC_MERMAID = """\
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4CAF50'}}}%%
 graph TD
     START([__start__]) --> query_analyzer[Query Analyzer]
     query_analyzer --> supervisor[Supervisor]
@@ -79,9 +78,9 @@ graph TD
 
     answer_generator --> END([__end__])
 
-    classDef agent fill:#E3F2FD,stroke:#1565C0,stroke-width:2px
-    classDef decision fill:#FFF9C4,stroke:#F9A825,stroke-width:2px
-    classDef terminal fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px
+    classDef agent fill:#155e75,stroke:#0891b2,stroke-width:2px,color:#e2e8f0
+    classDef decision fill:#854d0e,stroke:#ca8a04,stroke-width:2px,color:#fef9c3
+    classDef terminal fill:#166534,stroke:#22c55e,stroke-width:2px,color:#dcfce7
 
     class query_analyzer,supervisor,query_expander,vector_retriever,bm25_retriever,hybrid_merger,self_query_constructor,hypothetical_question_retriever,reranker,compressor,answer_generator agent
     class post_retrieval,compression_check decision

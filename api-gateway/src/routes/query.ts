@@ -53,12 +53,37 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 
     // Standard non-streaming request: proxy to Django backend
+    // Map frontend field names to backend field names
+    const options = (queryData as any).options || {};
+    const augmentations: string[] = options.augmentations || [];
+    const frontendFilters = (queryData as any).filters;
+
+    // Convert filters from array [{field, operator, value}] to dict {field: value}
+    let backendFilters: Record<string, unknown> = {};
+    if (Array.isArray(frontendFilters)) {
+      for (const f of frontendFilters) {
+        if (f && f.field && f.value !== undefined) {
+          backendFilters[f.field] = f.value;
+        }
+      }
+    } else if (frontendFilters && typeof frontendFilters === 'object') {
+      backendFilters = frontendFilters;
+    }
+
+    const backendPayload = {
+      query: queryData.query,
+      retrieval_method: (queryData as any).retrieval_method || (queryData as any).method || 'hybrid',
+      collection_name: (queryData as any).collection_id || (queryData as any).collection || 'renewable_energy',
+      top_k: options.top_k || (queryData as any).top_k || 5,
+      use_reranking: augmentations.includes('reranking') || (queryData as any).rerank || false,
+      use_compression: augmentations.includes('context_compression') || false,
+      use_query_expansion: augmentations.includes('query_expansion') || false,
+      filters: backendFilters,
+    };
+
     const backendRes = await proxyRequest(req, '/api/v1/retriever/query/', {
       method: 'POST',
-      data: {
-        ...queryData,
-        query_id: queryId,
-      },
+      data: backendPayload,
     });
 
     res.status(backendRes.status).json({

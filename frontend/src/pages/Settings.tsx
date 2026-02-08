@@ -87,8 +87,8 @@ export default function Settings() {
   const uiStore = useUIStore();
 
   // API Configuration
-  const [apiBaseUrl, setApiBaseUrl] = useState("http://172.168.1.95:3084");
-  const [wsUrl, setWsUrl] = useState("ws://172.168.1.95:3084/ws");
+  const [apiBaseUrl, setApiBaseUrl] = useState("http://172.168.1.95:3087");
+  const [wsUrl, setWsUrl] = useState("ws://172.168.1.95:3087/ws");
 
   // API Keys (masked)
   const [openaiKey, setOpenaiKey] = useState("");
@@ -144,8 +144,8 @@ export default function Settings() {
   };
 
   const handleReset = () => {
-    setApiBaseUrl("http://172.168.1.95:3084");
-    setWsUrl("ws://172.168.1.95:3084/ws");
+    setApiBaseUrl("http://172.168.1.95:3087");
+    setWsUrl("ws://172.168.1.95:3087/ws");
     setDefaultMethod(RetrievalMethod.HYBRID);
     setDefaultTopK(10);
     setDefaultScoreThreshold(0.5);

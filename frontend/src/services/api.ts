@@ -46,7 +46,7 @@ apiClient.interceptors.request.use(
     config.headers.set("X-Request-Time", new Date().toISOString());
 
     // Add correlation ID
-    const correlationId = crypto.randomUUID();
+    const correlationId = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36);
     config.headers.set("X-Correlation-ID", correlationId);
 
     return config;

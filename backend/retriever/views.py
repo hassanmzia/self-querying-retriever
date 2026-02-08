@@ -469,6 +469,28 @@ class AgentExecutionViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 # ---------------------------------------------------------------------------
+# Agent graph visualization
+# ---------------------------------------------------------------------------
+
+
+class AgentGraphView(APIView):
+    """Return the agent workflow graph for visualization."""
+
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        from .agents.visualization import get_agent_flow_diagram
+
+        fmt = request.query_params.get("format", "mermaid")
+        data = get_agent_flow_diagram()
+
+        if fmt == "mermaid":
+            return Response({"mermaid": data["mermaid"], "description": data["description"]})
+        return Response(data)
+
+
+# ---------------------------------------------------------------------------
 # Health check
 # ---------------------------------------------------------------------------
 

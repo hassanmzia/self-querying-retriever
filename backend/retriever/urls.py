@@ -19,8 +19,16 @@ router.register(
 )
 
 urlpatterns = [
-    path("", include(router.urls)),
+    # Standalone views must come before the router include so that
+    # explicit paths like agent-executions/graph/ are matched before
+    # the router's <pk> catch-all pattern.
     path("query/", views.QueryAPIView.as_view(), name="query-api"),
     path("health/", views.HealthCheckView.as_view(), name="health-check"),
     path("analytics/", views.AnalyticsView.as_view(), name="retriever-analytics"),
+    path(
+        "agent-executions/graph/",
+        views.AgentGraphView.as_view(),
+        name="agent-graph",
+    ),
+    path("", include(router.urls)),
 ]

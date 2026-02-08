@@ -48,13 +48,15 @@ app.use(
 // CORS configuration
 app.use(
   cors({
-    origin: config.corsOrigins,
+    origin: config.nodeEnv === 'production' ? config.corsOrigins : true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',
       'Authorization',
       config.apiKeyHeader,
       'X-Request-ID',
+      'X-Correlation-ID',
+      'X-Request-Time',
     ],
     exposedHeaders: ['X-Request-ID', 'X-Total-Count'],
     credentials: true,

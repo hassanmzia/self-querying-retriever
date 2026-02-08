@@ -64,6 +64,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
     search_fields = ["title", "content"]
     ordering_fields = ["created_at", "title"]
 
+    def get_serializer_class(self):
+        if self.action == "list":
+            return DocumentListSerializer
+        return DocumentSerializer
+
     @action(detail=False, methods=["post"], url_path="bulk-upload")
     def bulk_upload(self, request):
         """Accept a list of documents and queue them for async indexing."""

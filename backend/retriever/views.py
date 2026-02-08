@@ -287,6 +287,15 @@ class QueryAPIView(APIView):
         filters = data.get("filters", {})
         top_k = data.get("top_k", settings.DEFAULT_TOP_K)
         collection_name = data.get("collection_name", "renewable_energy")
+
+        # Resolve collection UUID to name if needed (frontend sends UUID as collection_id)
+        if collection_name and len(collection_name) == 36 and "-" in collection_name:
+            try:
+                col = Collection.objects.get(id=collection_name)
+                collection_name = col.name
+            except (Collection.DoesNotExist, ValueError):
+                pass  # Not a valid UUID or not found — use as-is
+
         expanded_query = ""
 
         # Optional query expansion.

@@ -100,11 +100,29 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
         method: 'POST',
         data: req.body,
       });
-      res.status(backendRes.status).json({
-        success: backendRes.status >= 200 && backendRes.status < 300,
-        data: backendRes.data,
-        timestamp: new Date().toISOString(),
-      });
+
+      if (backendRes.status >= 200 && backendRes.status < 300) {
+        // Wrap in ApiResponse format for frontend
+        res.status(backendRes.status).json({
+          data: backendRes.data,
+          status: backendRes.status,
+        });
+      } else {
+        // Extract validation error message from DRF response
+        const errData = backendRes.data;
+        let message = 'Collection creation failed';
+        if (errData && typeof errData === 'object') {
+          const firstKey = Object.keys(errData)[0];
+          if (firstKey && Array.isArray(errData[firstKey])) {
+            message = `${firstKey}: ${errData[firstKey][0]}`;
+          }
+        }
+        res.status(backendRes.status).json({
+          message,
+          detail: message,
+          data: errData,
+        });
+      }
       return;
     }
 

@@ -224,7 +224,7 @@ services:
     image: redis:7-alpine
     container_name: sqr-redis
     ports:
-      - "6383:6383"
+      - "8353:6383"
     command: redis-server --port 6383 --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis-data:/data

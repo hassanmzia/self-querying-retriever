@@ -52,13 +52,21 @@ class BaseRetriever(ABC):
             # Convert cosine distance to similarity score (1 - distance).
             distance = item.get("distance")
             score = round(1.0 - distance, 4) if distance is not None else None
+
+            # Extract the real document UUID from metadata (stored by the
+            # Celery indexing task) rather than using the ChromaDB chunk ID
+            # which has a _chunk_N suffix.
+            metadata = item.get("metadata") or {}
+            chroma_id = item.get("id", "")
+            doc_id = metadata.get("document_id") or chroma_id.split("_chunk_")[0] or chroma_id
+
             results.append(
                 {
-                    "document_id": item.get("id", ""),
-                    "title": (item.get("metadata") or {}).get("title", ""),
+                    "document_id": doc_id,
+                    "title": metadata.get("title", ""),
                     "content": item.get("document", ""),
                     "score": score,
-                    "metadata": item.get("metadata", {}),
+                    "metadata": metadata,
                 }
             )
         return results

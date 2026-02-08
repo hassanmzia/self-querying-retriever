@@ -30,6 +30,7 @@ from .serializers import (
     AgentExecutionSerializer,
     BulkDocumentUploadSerializer,
     CollectionSerializer,
+    DocumentListSerializer,
     DocumentSerializer,
     DocumentUploadSerializer,
     PipelineConfigSerializer,
@@ -437,12 +438,12 @@ class AgentExecutionViewSet(viewsets.ReadOnlyModelViewSet):
         """Return the agent workflow graph for visualization."""
         from .agents.visualization import get_agent_flow_diagram
 
-        fmt = request.query_params.get("format", "mermaid")
         data = get_agent_flow_diagram()
 
-        if fmt == "mermaid":
-            return Response({"mermaid": data["mermaid"], "description": data["description"]})
-        return Response(data)
+        return Response({
+            "data": {"definition": data["mermaid"]},
+            "status": 200,
+        })
 
     @action(detail=True, methods=["post"])
     def replay(self, request, pk=None):
@@ -474,6 +475,66 @@ class AgentExecutionViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 # ---------------------------------------------------------------------------
+# Agent list (static definitions for the frontend agent cards)
+# ---------------------------------------------------------------------------
+
+_AGENT_TYPE_MAP = {
+    "query_analyzer": "router",
+    "supervisor": "router",
+    "query_expander": "augmenter",
+    "self_query_constructor": "retriever",
+    "vector_retriever": "retriever",
+    "bm25_retriever": "retriever",
+    "hybrid_merger": "retriever",
+    "hypothetical_question_retriever": "retriever",
+    "reranker": "ranker",
+    "compressor": "augmenter",
+    "answer_generator": "synthesizer",
+}
+
+_AGENT_CAPABILITIES = {
+    "query_analyzer": ["query analysis", "strategy selection"],
+    "supervisor": ["routing", "orchestration"],
+    "query_expander": ["query expansion", "synonym generation"],
+    "self_query_constructor": ["metadata filtering", "structured query"],
+    "vector_retriever": ["semantic search", "embedding similarity"],
+    "bm25_retriever": ["keyword search", "TF-IDF"],
+    "hybrid_merger": ["ensemble retrieval", "score fusion"],
+    "hypothetical_question_retriever": ["hypothetical questions", "HyDE"],
+    "reranker": ["cross-encoder reranking", "precision improvement"],
+    "compressor": ["context compression", "relevance extraction"],
+    "answer_generator": ["answer synthesis", "response generation"],
+}
+
+
+class AgentListView(APIView):
+    """Return static agent definitions for the frontend agent cards."""
+
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        from .agents.visualization import get_agent_flow_diagram
+
+        data = get_agent_flow_diagram()
+        agents = []
+        for node in data["nodes"]:
+            if node["type"] == "terminal":
+                continue
+            node_id = node["id"]
+            agents.append({
+                "id": node_id,
+                "name": node["label"],
+                "description": f"{node['label']} agent in the retrieval pipeline",
+                "type": _AGENT_TYPE_MAP.get(node_id, "retriever"),
+                "status": "idle",
+                "capabilities": _AGENT_CAPABILITIES.get(node_id, [node["type"]]),
+            })
+
+        return Response({"data": agents, "status": 200})
+
+
+# ---------------------------------------------------------------------------
 # Agent graph visualization
 # ---------------------------------------------------------------------------
 
@@ -487,12 +548,12 @@ class AgentGraphView(APIView):
     def get(self, request):
         from .agents.visualization import get_agent_flow_diagram
 
-        fmt = request.query_params.get("format", "mermaid")
         data = get_agent_flow_diagram()
 
-        if fmt == "mermaid":
-            return Response({"mermaid": data["mermaid"], "description": data["description"]})
-        return Response(data)
+        return Response({
+            "data": {"definition": data["mermaid"]},
+            "status": 200,
+        })
 
 
 # ---------------------------------------------------------------------------

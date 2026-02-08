@@ -219,7 +219,7 @@ export function useStreamingQuery() {
         wsClient.connect();
       }
 
-      const queryId = crypto.randomUUID();
+      const queryId = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36);
 
       // Set up event handlers
       const unsubChunk = wsClient.onQueryChunk((chunk: StreamingChunk) => {

@@ -28,11 +28,7 @@ router.get('/graph', async (req: Request, res: Response, next: NextFunction) => 
   try {
     logger.debug('Fetching agent graph', { requestId: req.requestId });
 
-    await forwardResponse(req, res, '/api/v1/retriever/agent-executions/graph/', {
-      params: {
-        format: (req.query.format as string) || 'mermaid',
-      },
-    });
+    await forwardResponse(req, res, '/api/v1/retriever/agent-graph/');
   } catch (error) {
     next(error);
   }

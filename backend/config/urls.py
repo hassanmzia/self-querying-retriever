@@ -16,9 +16,9 @@ urlpatterns = [
     # Agent endpoints must be before the retriever include to avoid
     # router's <pk> catch-all matching "graph" as a primary key.
     path(
-        "api/v1/retriever/agent-executions/graph/",
+        "api/v1/retriever/agent-graph/",
         AgentGraphView.as_view(),
-        name="agent-graph",
+        name="agent-graph-root",
     ),
     path(
         "api/v1/retriever/agents/",

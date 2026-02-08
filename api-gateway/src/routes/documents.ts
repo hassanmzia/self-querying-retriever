@@ -12,11 +12,20 @@ const router = Router();
 // ============================================================
 
 /**
- * GET /api/documents
- * List all documents with optional pagination and filtering.
+ * GET /api/documents OR /api/collections
+ * When mounted at /api/collections, forward to the collections backend.
+ * When mounted at /api/documents, forward to the documents backend.
  */
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // This router is mounted at both /api/documents and /api/collections.
+    // Use req.baseUrl to determine which backend endpoint to call.
+    if (req.baseUrl.includes('collections')) {
+      logger.debug('Listing collections', { requestId: req.requestId });
+      await forwardResponse(req, res, '/api/v1/retriever/collections/');
+      return;
+    }
+
     logger.debug('Listing documents', {
       requestId: req.requestId,
       query: req.query,
@@ -75,12 +84,30 @@ router.post('/upload', (req: Request, res: Response) => {
 });
 
 /**
- * POST /api/documents
- * Upload a single document.
- * Accepts JSON body with content/metadata or multipart form data with file.
+ * POST /api/documents or /api/collections
+ * For documents: Upload a single document (JSON or multipart).
+ * For collections: Create a new collection.
  */
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Handle collection creation when mounted at /api/collections
+    if (req.baseUrl.includes('collections')) {
+      if (!req.body?.name || typeof req.body.name !== 'string') {
+        throw new AppError('Collection name is required', 400, 'INVALID_COLLECTION');
+      }
+      logger.info('Creating collection', { requestId: req.requestId, name: req.body.name });
+      const backendRes = await proxyRequest(req, '/api/v1/retriever/collections/', {
+        method: 'POST',
+        data: req.body,
+      });
+      res.status(backendRes.status).json({
+        success: backendRes.status >= 200 && backendRes.status < 300,
+        data: backendRes.data,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
     const contentType = req.get('content-type') || '';
 
     logger.info('Uploading document', {
@@ -124,12 +151,24 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * GET /api/documents/:id
- * Get a specific document by ID.
+ * GET /api/documents/:id or /api/collections/:id
+ * Get a specific document or collection by ID.
  */
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
+
+    // Handle collection detail when mounted at /api/collections
+    if (req.baseUrl.includes('collections')) {
+      // Skip route segment matches handled by sub-routes
+      if (id === 'collections') {
+        next();
+        return;
+      }
+      logger.debug('Fetching collection details', { requestId: req.requestId, collectionId: id });
+      await forwardResponse(req, res, `/api/v1/retriever/collections/${id}/`);
+      return;
+    }
 
     logger.debug('Fetching document', {
       requestId: req.requestId,
@@ -143,8 +182,8 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * PUT /api/documents/:id
- * Update an existing document.
+ * PUT /api/documents/:id or /api/collections/:id
+ * Update an existing document or collection.
  */
 router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -154,13 +193,17 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
       throw new AppError('Update data is required', 400, 'EMPTY_UPDATE');
     }
 
-    logger.info('Updating document', {
+    const endpoint = req.baseUrl.includes('collections')
+      ? `/api/v1/retriever/collections/${id}/`
+      : `/api/v1/retriever/documents/${id}/`;
+
+    logger.info(`Updating ${req.baseUrl.includes('collections') ? 'collection' : 'document'}`, {
       requestId: req.requestId,
-      documentId: id,
+      id,
       fields: Object.keys(req.body),
     });
 
-    const backendRes = await proxyRequest(req, `/api/v1/retriever/documents/${id}/`, {
+    const backendRes = await proxyRequest(req, endpoint, {
       method: 'PUT',
       data: req.body,
     });
@@ -176,19 +219,23 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * DELETE /api/documents/:id
- * Delete a document.
+ * DELETE /api/documents/:id or /api/collections/:id
+ * Delete a document or collection.
  */
 router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
 
-    logger.info('Deleting document', {
+    const endpoint = req.baseUrl.includes('collections')
+      ? `/api/v1/retriever/collections/${id}/`
+      : `/api/v1/retriever/documents/${id}/`;
+
+    logger.info(`Deleting ${req.baseUrl.includes('collections') ? 'collection' : 'document'}`, {
       requestId: req.requestId,
-      documentId: id,
+      id,
     });
 
-    const backendRes = await proxyRequest(req, `/api/v1/retriever/documents/${id}/`, {
+    const backendRes = await proxyRequest(req, endpoint, {
       method: 'DELETE',
     });
 

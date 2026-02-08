@@ -33,6 +33,10 @@ COPY --from=builder /app/dist ./dist
 
 # Create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Create logs directory writable by appuser
+RUN mkdir -p /app/logs && chown appuser:appgroup /app/logs
+
 USER appuser
 
 # Expose port

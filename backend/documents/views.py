@@ -122,12 +122,22 @@ class DocumentUploadView(APIView):
 
     def _handle_file_upload(self, request, uploaded_file):
         """Extract text from an uploaded file, create a Document, and queue indexing."""
+        from retriever.models import Collection
+
         title = request.data.get("title", "") or uploaded_file.name
         collection_name = (
             request.data.get("collection_id", "")
             or request.data.get("collection_name", "")
             or "renewable_energy"
         )
+
+        # Resolve collection UUID to human-readable name (frontend sends UUID).
+        if collection_name and len(collection_name) == 36 and "-" in collection_name:
+            try:
+                col = Collection.objects.get(id=collection_name)
+                collection_name = col.name
+            except (Collection.DoesNotExist, ValueError):
+                pass  # Not a valid UUID or not found — use as-is
 
         # Parse metadata JSON string from multipart form.
         metadata = {}

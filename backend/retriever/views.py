@@ -65,6 +65,22 @@ class DocumentViewSet(viewsets.ModelViewSet):
     search_fields = ["title", "content"]
     ordering_fields = ["created_at", "title"]
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # Resolve collection UUID to name (frontend sends UUID as collection_name).
+        coll = self.request.query_params.get("collection_name", "")
+        if coll and len(coll) == 36 and "-" in coll:
+            try:
+                col_obj = Collection.objects.get(id=coll)
+                qs = qs.filter(collection_name=col_obj.name)
+                # Remove from further django-filter processing since we handled it.
+                self.request.query_params._mutable = True
+                self.request.query_params.pop("collection_name", None)
+                self.request.query_params._mutable = False
+            except (Collection.DoesNotExist, ValueError):
+                pass
+        return qs
+
     def get_serializer_class(self):
         if self.action == "list":
             return DocumentListSerializer

@@ -8,9 +8,19 @@ from django.contrib import admin
 from django.urls import include, path
 
 from retriever.a2a.views import A2ADiscoveryView
+from retriever.views import AgentGraphView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+
+    # Agent graph must be before the retriever include to avoid router's
+    # <pk> catch-all matching "graph" as a primary key.
+    path(
+        "api/v1/retriever/agent-executions/graph/",
+        AgentGraphView.as_view(),
+        name="agent-graph",
+    ),
+
     path("api/v1/retriever/", include("retriever.urls")),
     path("api/v1/documents/", include("documents.urls")),
     path("api/v1/analytics/", include("analytics.urls")),

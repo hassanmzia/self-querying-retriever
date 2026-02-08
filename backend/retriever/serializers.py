@@ -95,6 +95,9 @@ class DocumentListSerializer(serializers.ModelSerializer):
 class CollectionSerializer(serializers.ModelSerializer):
     """Serializer for vector-store collections."""
 
+    updated_at = serializers.SerializerMethodField()
+    vector_dimension = serializers.SerializerMethodField()
+
     class Meta:
         model = Collection
         fields = [
@@ -103,9 +106,20 @@ class CollectionSerializer(serializers.ModelSerializer):
             "description",
             "document_count",
             "embedding_model",
+            "vector_dimension",
             "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "created_at"]
+
+    def get_updated_at(self, obj):
+        return obj.created_at.isoformat() if obj.created_at else ""
+
+    def get_vector_dimension(self, obj):
+        model = obj.embedding_model or ""
+        if "3-large" in model:
+            return 3072
+        return 1536
 
 
 class QueryResultSerializer(serializers.ModelSerializer):

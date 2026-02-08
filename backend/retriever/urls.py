@@ -26,7 +26,7 @@ urlpatterns = [
     path("health/", views.HealthCheckView.as_view(), name="health-check"),
     path("analytics/", views.AnalyticsView.as_view(), name="retriever-analytics"),
     path(
-        "agent-executions/graph/",
+        "agent-graph/",
         views.AgentGraphView.as_view(),
         name="agent-graph",
     ),

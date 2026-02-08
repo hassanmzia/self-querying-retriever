@@ -50,8 +50,8 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     });
 
     if (contentType.includes('multipart/form-data')) {
-      // For file uploads, proxy the raw request directly
-      await forwardResponse(req, res, '/api/v1/retriever/documents/', {
+      // For file uploads, proxy to the documents app upload endpoint
+      await forwardResponse(req, res, '/api/v1/documents/upload/', {
         method: 'POST',
         headers: {
           'Content-Type': contentType,

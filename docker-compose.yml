@@ -80,6 +80,7 @@ services:
       - CHROMA_PORT=8583
       - LANGFUSE_HOST=http://langfuse:3085
     volumes:
+      - ./backend:/app
       - backend-static:/app/staticfiles
       - backend-media:/app/mediafiles
     depends_on:
@@ -247,7 +248,7 @@ services:
   # ChromaDB - Vector database
   # ---------------------------------------------------------------------------
   chromadb:
-    image: chromadb/chroma:1.0.9
+    image: chromadb/chroma:0.6.3
     container_name: sqr-chromadb
     ports:
       - "8583:8583"

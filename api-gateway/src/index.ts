@@ -48,7 +48,7 @@ app.use(
 // CORS configuration
 app.use(
   cors({
-    origin: config.nodeEnv === 'production' ? config.corsOrigins : true,
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',

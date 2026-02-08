@@ -23,7 +23,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code (cache-bust: agent-graph-view)
 COPY . .
 
 # Create directories for static and media files

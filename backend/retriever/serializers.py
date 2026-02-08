@@ -32,38 +32,64 @@ class DocumentMetadataSerializer(serializers.ModelSerializer):
 
 
 class DocumentSerializer(serializers.ModelSerializer):
-    """Full document representation including structured metadata."""
+    """Full document representation matching the frontend Document interface."""
 
-    structured_metadata = DocumentMetadataSerializer(read_only=True)
+    metadata = serializers.SerializerMethodField()
+    collection_id = serializers.CharField(source="collection_name")
 
     class Meta:
         model = Document
         fields = [
             "id",
-            "title",
             "content",
-            "metadata_json",
-            "source",
-            "collection_name",
-            "structured_metadata",
-            "created_at",
-            "updated_at",
+            "metadata",
+            "collection_id",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id"]
+
+    def get_metadata(self, obj):
+        meta = obj.metadata_json.copy() if obj.metadata_json else {}
+        meta["source"] = obj.source or obj.title or ""
+        meta["created_at"] = obj.created_at.isoformat() if obj.created_at else ""
+        meta["updated_at"] = obj.updated_at.isoformat() if obj.updated_at else ""
+        if hasattr(obj, "structured_metadata"):
+            sm = obj.structured_metadata
+            if sm.topics:
+                meta["tags"] = sm.topics
+        return meta
 
 
 class DocumentListSerializer(serializers.ModelSerializer):
-    """Lightweight document list representation (no full content)."""
+    """Lightweight document list representation with truncated content."""
+
+    metadata = serializers.SerializerMethodField()
+    collection_id = serializers.CharField(source="collection_name")
+    content = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
         fields = [
             "id",
-            "title",
-            "source",
-            "collection_name",
-            "created_at",
+            "content",
+            "metadata",
+            "collection_id",
         ]
+
+    def get_content(self, obj):
+        if obj.content and len(obj.content) > 300:
+            return obj.content[:300] + "..."
+        return obj.content or ""
+
+    def get_metadata(self, obj):
+        meta = obj.metadata_json.copy() if obj.metadata_json else {}
+        meta["source"] = obj.source or obj.title or ""
+        meta["created_at"] = obj.created_at.isoformat() if obj.created_at else ""
+        meta["updated_at"] = obj.updated_at.isoformat() if obj.updated_at else ""
+        if hasattr(obj, "structured_metadata"):
+            sm = obj.structured_metadata
+            if sm.topics:
+                meta["tags"] = sm.topics
+        return meta
 
 
 class CollectionSerializer(serializers.ModelSerializer):

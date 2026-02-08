@@ -19,8 +19,8 @@ services:
     ports:
       - "3083:3083"
     environment:
-      - VITE_API_URL=http://172.168.1.95:3084
-      - VITE_WS_URL=ws://172.168.1.95:3084
+      - VITE_API_URL=http://172.168.1.95:3087
+      - VITE_WS_URL=ws://172.168.1.95:3087
       - VITE_APP_TITLE=AI Self-Querying Retriever
     depends_on:
       - api-gateway
@@ -37,7 +37,7 @@ services:
       dockerfile: Dockerfile
     container_name: sqr-api-gateway
     ports:
-      - "3084:3084"
+      - "3087:3084"
     environment:
       - PORT=3084
       - DJANGO_BACKEND_URL=http://backend:8083
